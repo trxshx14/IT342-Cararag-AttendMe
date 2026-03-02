@@ -5,8 +5,20 @@ AttendMe is a modern, role-based attendance management system designed to help s
 
 Built with a powerful full-stack architecture using React, Spring Boot, and Kotlin (Android), AttendMe ensures reliability, scalability, and a seamless user experience across web and mobile platforms.
 
+# 🎯 Project Goals
+
+Replace manual attendance logs
+
+Improve attendance accuracy
+
+Provide secure role-based access
+
+Enable digital reporting
+
+Support both web and mobile platforms
+
 # 🚀 Tech Stack: 
-🖥 Frontend (Web)
+## Frontend (Web)
 
 ⚛ React.js
 
@@ -16,7 +28,7 @@ React Router
 
 Responsive UI Design
 
-🔐 Backend (API Server)
+## Backend
 
 ☕ Spring Boot
 
@@ -28,7 +40,7 @@ Responsive UI Design
 
 🛢 MySQL / PostgreSQL (configurable)
 
-📱 Mobile Application
+ ## Mobile Application 
 
 🤖 Kotlin
 
@@ -37,3 +49,9 @@ Android Studio
 Retrofit (API calls)
 
 Material Design Components
+
+# 👩‍💻 Developed By
+
+Trisha Raye V. Cararag
+BSIT Student
+
