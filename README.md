@@ -7,51 +7,51 @@ Built with a powerful full-stack architecture using React, Spring Boot, and Kotl
 
 # 🎯 Project Goals
 
-Replace manual attendance logs
+* Replace manual attendance logs
 
-Improve attendance accuracy
+* Improve attendance accuracy
 
-Provide secure role-based access
+* Provide secure role-based access
 
-Enable digital reporting
+* Enable digital reporting
 
-Support both web and mobile platforms
+* Support both web and mobile platforms
 
 # 🚀 Tech Stack: 
 ## Frontend (Web)
 
 ⚛ React.js
 
-Axios (API communication)
+* Axios (API communication)
 
-React Router
+* React Router
 
-Responsive UI Design
+* Responsive UI Design
 
 ## Backend
 
-☕ Spring Boot
+* Spring Boot
 
-🔑 JWT Authentication
+* JWT Authentication
 
-🗄 JPA / Hibernate
+* JPA / Hibernate
 
-🔄 RESTful API Architecture
+* RESTful API Architecture
 
-🛢 MySQL / PostgreSQL (configurable)
+* MySQL / PostgreSQL (configurable)
 
  ## Mobile Application 
 
-🤖 Kotlin
+* Kotlin
 
-Android Studio
+* Android Studio
 
-Retrofit (API calls)
+* Retrofit (API calls)
 
-Material Design Components
+* Material Design Components
 
 # 👩‍💻 Developed By
 
-Trisha Raye V. Cararag
-BSIT Student
+## Trisha Raye V. Cararag
+## BSIT Student
 
