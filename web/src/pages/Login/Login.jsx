@@ -15,71 +15,49 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      console.log('1️⃣ Attempting login...');
-      const response = await authService.login(form.email, form.password);
-      console.log('2️⃣ Login response:', response);
-      
-      if (response.success) {
-        console.log('3️⃣ Getting current user...');
-        const userResponse = await authService.getCurrentUser();
-        console.log('4️⃣ User response:', userResponse);
-        
-        if (userResponse.success) {
-          const user = userResponse.data;
-          console.log('5️⃣ User data:', user);
-          
-          const userData = {
-            id: user.userId,
-            name: user.fullName,
-            email: user.email,
-            role: user.role.toLowerCase(),
-            avatar: user.fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-          };
-          
-          localStorage.setItem('user', JSON.stringify(userData));
-          console.log('6️⃣ User stored:', userData);
-          
-          // Small delay to ensure everything is saved
-          setTimeout(() => {
-            // Determine redirect path based on role
-            const redirectPath = user.role.toLowerCase() === 'admin' 
-              ? '/admin/dashboard' 
-              : '/teacher/dashboard';
-            
-            console.log('7️⃣ Redirecting to:', redirectPath);
-            
-            // Try React Router navigation first
-            navigate(redirectPath, { replace: true });
-            
-            // Fallback: if after 500ms we're still on login page, use window.location
-            setTimeout(() => {
-              if (window.location.pathname === '/login') {
-                console.log('⚠️ React Router navigation failed, using window.location');
-                window.location.href = redirectPath;
-              }
-            }, 500);
-          }, 100);
-        } else {
-          console.error('❌ Failed to get user:', userResponse);
-          setError('Failed to get user details');
-          setLoading(false);
-        }
-      } else {
-        console.error('❌ Login failed:', response);
-        setError(response.message || 'Invalid email or password');
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error('❌ Login error:', err);
-      setError(err.message || 'Unable to connect to server. Please try again.');
+  try {
+    console.log('1️⃣ Attempting login...');
+    const response = await authService.login(form.email, form.password);
+    console.log('2️⃣ Login response:', response);
+
+    if (response.success) {
+      // ✅ Use data directly from login response — no second API call needed
+      const user = response.data;
+      console.log('3️⃣ User data:', user);
+
+      const userData = {
+        id: user.userId,
+        name: user.username || user.fullName,
+        email: user.email,
+        role: user.role.toLowerCase(),
+        avatar: (user.username || user.fullName || 'U')
+          .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+      };
+
+      localStorage.setItem('user', JSON.stringify(userData));
+      console.log('4️⃣ User stored:', userData);
+
+      const redirectPath = user.role.toLowerCase() === 'admin'
+        ? '/admin/dashboard'
+        : '/teacher/dashboard';
+
+      console.log('5️⃣ Redirecting to:', redirectPath);
+      navigate(redirectPath, { replace: true });
+
+    } else {
+      setError(response.message || 'Invalid email or password');
       setLoading(false);
     }
-  };
+  } catch (err) {
+    console.error('❌ Login error:', err);
+    setError(err.message || 'Unable to connect to server. Please try again.');
+    setLoading(false);
+  }
+};
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -234,7 +212,7 @@ const Login = () => {
               disabled={loading}
               className="google-btn"
             >
-              <img 
+              <img
                 src="https://www.google.com/favicon.ico" 
                 alt="Google" 
                 style={{ width: '20px', height: '20px' }}
