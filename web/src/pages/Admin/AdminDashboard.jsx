@@ -11,33 +11,38 @@ const AdminDashboard = () => {
     teachersWithClasses: 0,
     avgClassSize: 0
   });
-  
-  const [recentActivity, setRecentActivity] = useState([]);
+
   const [topTeachers, setTopTeachers] = useState([]);
-  const [classDistribution, setClassDistribution] = useState([]);
+  const [classDistribution, setClassDistribution] = useState({ small: 0, medium: 0, large: 0 });
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('');
+  const [currentTime, setCurrentTime] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    setUserName(user.name || 'Administrator');
+    updateTime();
+    const timer = setInterval(updateTime, 60000);
     fetchDashboardData();
+    return () => clearInterval(timer);
   }, []);
+
+  const updateTime = () => {
+    const now = new Date();
+    setCurrentTime(now.toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    }));
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      
-      // Fetch all dashboard data
       const [teachersRes, studentsRes, classesRes] = await Promise.all([
-        fetch('http://localhost:8888/api/users/role/TEACHER', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch('http://localhost:8888/api/students', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch('http://localhost:8888/api/classes', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        fetch('http://localhost:8888/api/users/role/TEACHER', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('http://localhost:8888/api/students', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('http://localhost:8888/api/classes', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
 
       const teachersData = await teachersRes.json();
@@ -48,290 +53,285 @@ const AdminDashboard = () => {
       const students = studentsData.data || [];
       const classes = classesData.data || [];
 
-      // Calculate statistics
       const activeClasses = classes.filter(c => c.studentCount > 0).length;
-      const avgClassSize = classes.length > 0 
-        ? Math.round(students.length / classes.length) 
-        : 0;
-
-      // Find teachers with classes
+      const avgClassSize = classes.length > 0 ? Math.round(students.length / classes.length) : 0;
       const teacherIdsWithClasses = [...new Set(classes.map(c => c.teacherId))];
-      
+
       setStats({
         totalTeachers: teachers.length,
         totalStudents: students.length,
         totalClasses: classes.length,
-        activeClasses: activeClasses,
+        activeClasses,
         teachersWithClasses: teacherIdsWithClasses.length,
-        avgClassSize: avgClassSize
+        avgClassSize
       });
 
-      // Get top teachers by class count
       const teacherClassCount = {};
       classes.forEach(cls => {
         teacherClassCount[cls.teacherId] = (teacherClassCount[cls.teacherId] || 0) + 1;
       });
 
-      const topTeacherList = Object.entries(teacherClassCount)
-        .map(([teacherId, count]) => {
-          const teacher = teachers.find(t => t.userId === parseInt(teacherId));
-          return {
-            teacherId,
-            teacherName: teacher?.fullName || 'Unknown Teacher',
-            classCount: count
-          };
-        })
-        .sort((a, b) => b.classCount - a.classCount)
-        .slice(0, 5);
+      setTopTeachers(
+        Object.entries(teacherClassCount)
+          .map(([teacherId, count]) => {
+            const teacher = teachers.find(t => t.userId === parseInt(teacherId));
+            return { teacherId, teacherName: teacher?.fullName || 'Unknown', classCount: count };
+          })
+          .sort((a, b) => b.classCount - a.classCount)
+          .slice(0, 5)
+      );
 
-      setTopTeachers(topTeacherList);
-
-      // Class distribution by size
-      const distribution = {
+      setClassDistribution({
         small: classes.filter(c => c.studentCount < 15).length,
         medium: classes.filter(c => c.studentCount >= 15 && c.studentCount < 30).length,
         large: classes.filter(c => c.studentCount >= 30).length
-      };
-      setClassDistribution(distribution);
-
-      // Fetch recent teacher/class activity
-      const activityRes = await fetch('http://localhost:8888/api/classes/recent?limit=5', {
-        headers: { 'Authorization': `Bearer ${token}` }
       });
-      const activityData = await activityRes.json();
-      setRecentActivity(activityData.data || []);
 
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+    } catch (err) {
+      console.error('Dashboard fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good Morning';
+    if (h < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
+  const getInitials = (name) =>
+    name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '??';
+
+  const totalDist = stats.totalClasses || 1;
+
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading dashboard...</p>
+      <div className="ad-loading">
+        <div className="ad-spinner" />
+        <p>Loading dashboard…</p>
       </div>
     );
   }
 
   return (
     <div className="admin-dashboard">
-      {/* Stats Grid */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#e0f2fe', color: '#0284c7' }}>👥</div>
-          <div className="stat-info">
-            <div className="stat-value">{stats.totalStudents}</div>
-            <div className="stat-label">Total Students</div>
-            <div className="stat-sub">Across {stats.totalClasses} classes</div>
-          </div>
-        </div>
 
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#fae8ff', color: '#a855f7' }}>👨‍🏫</div>
-          <div className="stat-info">
-            <div className="stat-value">{stats.totalTeachers}</div>
-            <div className="stat-label">Total Teachers</div>
-            <div className="stat-sub">{stats.teachersWithClasses} have classes</div>
-          </div>
+      {/* ── Welcome Banner ─────────────────────────────── */}
+      <div className="ad-welcome">
+        <div className="ad-welcome-orb ad-orb1" />
+        <div className="ad-welcome-orb ad-orb2" />
+        <div className="ad-welcome-orb ad-orb3" />
+        <div className="ad-welcome-left">
+          <p className="ad-greeting-label">{getGreeting()}</p>
+          <h1 className="ad-greeting-name">{userName} 👋</h1>
+          <p className="ad-greeting-sub">Here's what's happening with your school today.</p>
         </div>
-
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#dcfce7', color: '#16a34a' }}>📚</div>
-          <div className="stat-info">
-            <div className="stat-value">{stats.totalClasses}</div>
-            <div className="stat-label">Total Classes</div>
-            <div className="stat-sub">{stats.activeClasses} active</div>
+        <div className="ad-welcome-right">
+          <div className="ad-date-pill">
+            <span className="ad-date-icon">📅</span>
+            <span>{currentTime}</span>
           </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#fff7ed', color: '#ea580c' }}>📊</div>
-          <div className="stat-info">
-            <div className="stat-value">{stats.avgClassSize}</div>
-            <div className="stat-label">Avg Class Size</div>
-            <div className="stat-sub">Students per class</div>
+          <div className="ad-mini-stats">
+            <div className="ad-mini-stat">
+              <span className="ad-mini-val">{stats.totalStudents}</span>
+              <span className="ad-mini-lbl">Students</span>
+            </div>
+            <div className="ad-mini-divider" />
+            <div className="ad-mini-stat">
+              <span className="ad-mini-val">{stats.totalClasses}</span>
+              <span className="ad-mini-lbl">Classes</span>
+            </div>
+            <div className="ad-mini-divider" />
+            <div className="ad-mini-stat">
+              <span className="ad-mini-val">{stats.totalTeachers}</span>
+              <span className="ad-mini-lbl">Teachers</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Class Distribution and Top Teachers */}
-      <div className="two-col">
-        <div className="card">
-          <div className="card-header">
-            <h3>Class Size Distribution</h3>
-            <span className="date-badge">📊 Overview</span>
+      {/* ── Stats Grid ─────────────────────────────────── */}
+      <div className="ad-stats-grid">
+        <div className="ad-stat-card" style={{ '--card-accent': '#3b82f6', '--card-glow': 'rgba(59,130,246,0.18)' }}>
+          <div className="ad-stat-icon-wrap" style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}>👥</div>
+          <div className="ad-stat-body">
+            <span className="ad-stat-label">Total Students</span>
+            <span className="ad-stat-value">{stats.totalStudents}</span>
+            <span className="ad-stat-sub ad-positive">↑ 12% this month</span>
           </div>
-          <div className="card-body">
-            <div className="distribution-grid">
-              <div className="distribution-item">
-                <div className="distribution-label">
-                  <span className="distribution-badge small">Small</span>
-                  <span className="distribution-count">{classDistribution.small}</span>
-                </div>
-                <div className="progress-wrap">
-                  <div 
-                    className="progress-bar small" 
-                    style={{ 
-                      width: `${stats.totalClasses ? (classDistribution.small / stats.totalClasses) * 100 : 0}%`,
-                      background: '#3b82f6'
-                    }}
-                  />
-                </div>
-                <span className="distribution-desc">Less than 15 students</span>
-              </div>
+        </div>
 
-              <div className="distribution-item">
-                <div className="distribution-label">
-                  <span className="distribution-badge medium">Medium</span>
-                  <span className="distribution-count">{classDistribution.medium}</span>
-                </div>
-                <div className="progress-wrap">
-                  <div 
-                    className="progress-bar medium" 
-                    style={{ 
-                      width: `${stats.totalClasses ? (classDistribution.medium / stats.totalClasses) * 100 : 0}%`,
-                      background: '#f59e0b'
-                    }}
-                  />
-                </div>
-                <span className="distribution-desc">15-30 students</span>
-              </div>
+        <div className="ad-stat-card" style={{ '--card-accent': '#ec4899', '--card-glow': 'rgba(236,72,153,0.15)' }}>
+          <div className="ad-stat-icon-wrap" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)' }}>👨‍🏫</div>
+          <div className="ad-stat-body">
+            <span className="ad-stat-label">Total Teachers</span>
+            <span className="ad-stat-value">{stats.totalTeachers}</span>
+            <span className="ad-stat-sub">{stats.teachersWithClasses} with classes</span>
+          </div>
+        </div>
 
-              <div className="distribution-item">
-                <div className="distribution-label">
-                  <span className="distribution-badge large">Large</span>
-                  <span className="distribution-count">{classDistribution.large}</span>
-                </div>
-                <div className="progress-wrap">
-                  <div 
-                    className="progress-bar large" 
-                    style={{ 
-                      width: `${stats.totalClasses ? (classDistribution.large / stats.totalClasses) * 100 : 0}%`,
-                      background: '#ef4444'
-                    }}
-                  />
-                </div>
-                <span className="distribution-desc">30+ students</span>
-              </div>
+        <div className="ad-stat-card" style={{ '--card-accent': '#06b6d4', '--card-glow': 'rgba(6,182,212,0.15)' }}>
+          <div className="ad-stat-icon-wrap" style={{ background: 'linear-gradient(135deg, #4facfe, #00f2fe)' }}>📚</div>
+          <div className="ad-stat-body">
+            <span className="ad-stat-label">Total Classes</span>
+            <span className="ad-stat-value">{stats.totalClasses}</span>
+            <span className="ad-stat-sub">{stats.activeClasses} active</span>
+          </div>
+        </div>
+
+        <div className="ad-stat-card" style={{ '--card-accent': '#10b981', '--card-glow': 'rgba(16,185,129,0.15)' }}>
+          <div className="ad-stat-icon-wrap" style={{ background: 'linear-gradient(135deg, #43e97b, #38f9d7)' }}>📊</div>
+          <div className="ad-stat-body">
+            <span className="ad-stat-label">Avg Class Size</span>
+            <span className="ad-stat-value">{stats.avgClassSize}</span>
+            <span className="ad-stat-sub">students per class</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Analytics Row ──────────────────────────────── */}
+      <div className="ad-analytics-row">
+
+        {/* Class Distribution */}
+        <div className="ad-card">
+          <div className="ad-card-header">
+            <div>
+              <h3 className="ad-card-title">Class Size Distribution</h3>
+              <p className="ad-card-sub">Breakdown by enrollment size</p>
             </div>
+            <span className="ad-badge">Overview</span>
+          </div>
+
+          <div className="ad-dist-list">
+            {[
+              { label: 'Small Classes', key: 'small', desc: '< 15 students', color: '#3b82f6', gradient: 'linear-gradient(90deg, #667eea, #3b82f6)' },
+              { label: 'Medium Classes', key: 'medium', desc: '15–30 students', color: '#06b6d4', gradient: 'linear-gradient(90deg, #4facfe, #06b6d4)' },
+              { label: 'Large Classes', key: 'large', desc: '30+ students', color: '#10b981', gradient: 'linear-gradient(90deg, #43e97b, #10b981)' },
+            ].map(({ label, key, desc, gradient }) => (
+              <div key={key} className="ad-dist-item">
+                <div className="ad-dist-top">
+                  <span className="ad-dist-label">{label}</span>
+                  <div className="ad-dist-right">
+                    <span className="ad-dist-desc">{desc}</span>
+                    <span className="ad-dist-count">{classDistribution[key]}</span>
+                  </div>
+                </div>
+                <div className="ad-progress-track">
+                  <div
+                    className="ad-progress-fill"
+                    style={{ width: `${(classDistribution[key] / totalDist) * 100}%`, background: gradient }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Top Teachers */}
-        <div className="card">
-          <div className="card-header">
-            <h3>Top Teachers by Classes</h3>
-            <button 
-              className="btn-outline btn-sm"
-              onClick={() => navigate('/admin/users')}
-            >
-              View All
-            </button>
-          </div>
-          <div className="card-body" style={{ padding: 0 }}>
-            <div className="top-teachers-list">
-              {topTeachers.length === 0 ? (
-                <div className="empty-state">
-                  <p>No teachers found.</p>
-                </div>
-              ) : (
-                topTeachers.map((teacher, index) => (
-                  <div key={teacher.teacherId} className="top-teacher-item">
-                    <div className="teacher-rank">#{index + 1}</div>
-                    <div className="teacher-info">
-                      <div className="teacher-name">{teacher.teacherName}</div>
-                      <div className="teacher-classes">{teacher.classCount} classes</div>
-                    </div>
-                    <div className="teacher-badge">
-                      <span className="class-count-badge">{teacher.classCount}</span>
-                    </div>
-                  </div>
-                ))
-              )}
+        <div className="ad-card">
+          <div className="ad-card-header">
+            <div>
+              <h3 className="ad-card-title">🏆 Top Teachers</h3>
+              <p className="ad-card-sub">Ranked by class assignments</p>
             </div>
+            <button className="ad-view-all" onClick={() => navigate('/admin/users')}>View All →</button>
           </div>
-        </div>
-      </div>
 
-      {/* Recent Activity */}
-      <div className="card" style={{ marginTop: '24px' }}>
-        <div className="card-header">
-          <h3>Recent Class Updates</h3>
-          <button 
-            className="btn-outline btn-sm"
-            onClick={() => navigate('/admin/classes')}
-          >
-            Manage Classes
-          </button>
-        </div>
-        <div className="card-body" style={{ padding: 0 }}>
-          <div className="recent-activity-list">
-            {recentActivity.length === 0 ? (
-              <div className="empty-state">
-                <p>No recent activity.</p>
+          <div className="ad-teachers-list">
+            {topTeachers.length === 0 ? (
+              <div className="ad-empty">No teachers assigned yet</div>
+            ) : topTeachers.map((t, i) => (
+              <div key={t.teacherId} className="ad-teacher-row">
+                <div className={`ad-rank ad-rank-${i + 1}`}>#{i + 1}</div>
+                <div className="ad-teacher-avatar">{getInitials(t.teacherName)}</div>
+                <div className="ad-teacher-info">
+                  <span className="ad-teacher-name">{t.teacherName}</span>
+                  <span className="ad-teacher-meta">{t.classCount} class{t.classCount !== 1 ? 'es' : ''} assigned</span>
+                </div>
+                <div className="ad-teacher-chip">{t.classCount}</div>
               </div>
-            ) : (
-              recentActivity.map((activity, index) => (
-                <div key={index} className="activity-item">
-                  <div className="activity-icon">
-                    {activity.type === 'class' ? '📚' : '👥'}
-                  </div>
-                  <div className="activity-details">
-                    <div className="activity-title">{activity.title}</div>
-                    <div className="activity-time">{activity.time}</div>
-                  </div>
-                </div>
-              ))
-            )}
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="quick-actions">
-        <h3>Quick Actions</h3>
-        <div className="quick-actions-grid">
-          <button 
-            className="quick-action-card"
-            onClick={() => navigate('/admin/users')}
-          >
-            <div className="quick-action-icon" style={{ background: '#e0f2fe', color: '#0284c7' }}>👥</div>
-            <div className="quick-action-content">
-              <div className="quick-action-title">Manage Teachers</div>
-              <div className="quick-action-desc">Add, edit, or deactivate users</div>
+      {/* ── School Summary ─────────────────────────────── */}
+      <div className="ad-card ad-summary-card">
+        <div className="ad-card-header">
+          <div>
+            <h3 className="ad-card-title">📋 School Summary</h3>
+            <p className="ad-card-sub">Key metrics at a glance</p>
+          </div>
+        </div>
+        <div className="ad-summary-grid">
+          <div className="ad-summary-item">
+            <span className="ad-summary-icon" style={{ background: '#eff6ff' }}>🏫</span>
+            <div>
+              <span className="ad-summary-val">{stats.totalClasses}</span>
+              <span className="ad-summary-lbl">Total Classes</span>
             </div>
-            <span className="quick-action-arrow">→</span>
-          </button>
-
-          <button 
-            className="quick-action-card"
-            onClick={() => navigate('/admin/classes')}
-          >
-            <div className="quick-action-icon" style={{ background: '#dcfce7', color: '#16a34a' }}>📚</div>
-            <div className="quick-action-content">
-              <div className="quick-action-title">Manage Classes</div>
-              <div className="quick-action-desc">Create classes and assign teachers</div>
+          </div>
+          <div className="ad-summary-item">
+            <span className="ad-summary-icon" style={{ background: '#f0fdf4' }}>✅</span>
+            <div>
+              <span className="ad-summary-val">{stats.activeClasses}</span>
+              <span className="ad-summary-lbl">Active Classes</span>
             </div>
-            <span className="quick-action-arrow">→</span>
-          </button>
-
-          <button 
-            className="quick-action-card"
-            onClick={() => navigate('/admin/reports')}
-          >
-            <div className="quick-action-icon" style={{ background: '#fef3c7', color: '#d97706' }}>📊</div>
-            <div className="quick-action-content">
-              <div className="quick-action-title">View Reports</div>
-              <div className="quick-action-desc">Analyze attendance and class data</div>
+          </div>
+          <div className="ad-summary-item">
+            <span className="ad-summary-icon" style={{ background: '#faf5ff' }}>👨‍🏫</span>
+            <div>
+              <span className="ad-summary-val">{stats.teachersWithClasses}</span>
+              <span className="ad-summary-lbl">Teachers w/ Classes</span>
             </div>
-            <span className="quick-action-arrow">→</span>
-          </button>
+          </div>
+          <div className="ad-summary-item">
+            <span className="ad-summary-icon" style={{ background: '#fff7ed' }}>📊</span>
+            <div>
+              <span className="ad-summary-val">{stats.avgClassSize}</span>
+              <span className="ad-summary-lbl">Avg Class Size</span>
+            </div>
+          </div>
+          <div className="ad-summary-item">
+            <span className="ad-summary-icon" style={{ background: '#fef2f2' }}>🎓</span>
+            <div>
+              <span className="ad-summary-val">{stats.totalStudents}</span>
+              <span className="ad-summary-lbl">Total Students</span>
+            </div>
+          </div>
+          <div className="ad-summary-item">
+            <span className="ad-summary-icon" style={{ background: '#f0f9ff' }}>👥</span>
+            <div>
+              <span className="ad-summary-val">{stats.totalTeachers}</span>
+              <span className="ad-summary-lbl">Total Teachers</span>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* ── Quick Actions ──────────────────────────────── */}
+      <div className="ad-quick-section">
+        <h3 className="ad-quick-title">Quick Actions</h3>
+        <div className="ad-quick-grid">
+          {[
+            { icon: '👥', label: 'Manage Users', desc: 'Add or edit accounts', path: '/admin/users', grad: 'linear-gradient(135deg, #667eea, #764ba2)' },
+            { icon: '📚', label: 'Manage Classes', desc: 'Create or modify classes', path: '/admin/classes', grad: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
+            { icon: '📊', label: 'View Reports', desc: 'Analytics and insights', path: '/admin/reports', grad: 'linear-gradient(135deg, #43e97b, #38f9d7)' },
+          ].map(({ icon, label, desc, path, grad }) => (
+            <button key={path} className="ad-quick-card" onClick={() => navigate(path)}>
+              <div className="ad-quick-icon" style={{ background: grad }}>{icon}</div>
+              <div className="ad-quick-info">
+                <span className="ad-quick-label">{label}</span>
+                <span className="ad-quick-desc">{desc}</span>
+              </div>
+              <span className="ad-quick-arrow">→</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
     </div>
   );
 };

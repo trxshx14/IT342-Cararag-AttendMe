@@ -6,6 +6,7 @@ import './ManageClasses.css';
 
 const ManageClasses = () => {
   const [classes, setClasses] = useState([]);
+  const [filteredClasses, setFilteredClasses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,6 +15,11 @@ const ManageClasses = () => {
   const [showStudentsModal, setShowStudentsModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState(null);
   const [classStudents, setClassStudents] = useState([]);
+
+  // Search and Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterTeacher, setFilterTeacher] = useState('all');
+  const [filterYear, setFilterYear] = useState('all');
 
   // Add Student Modal state
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
@@ -39,9 +45,9 @@ const ManageClasses = () => {
   const nextYear = currentYear + 1;
   const defaultAcademicYear = `${currentYear}-${nextYear}`;
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
+
+  useEffect(() => { filterClasses(); }, [classes, searchTerm, filterTeacher, filterYear]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -50,26 +56,37 @@ const ManageClasses = () => {
         classService.getAllClasses(),
         userService.getUsersByRole('TEACHER')
       ]);
-      if (classesRes.success) setClasses(classesRes.data);
+      if (classesRes.success) { setClasses(classesRes.data); setFilteredClasses(classesRes.data); }
       if (teachersRes.success) setTeachers(teachersRes.data);
     } catch (err) {
-      console.error('Error fetching data:', err);
       setError('Failed to load data');
     } finally {
       setLoading(false);
     }
   };
 
+  const filterClasses = () => {
+    let filtered = [...classes];
+    if (searchTerm) {
+      filtered = filtered.filter(cls =>
+        cls.className?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cls.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cls.section?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    if (filterTeacher !== 'all') filtered = filtered.filter(cls => cls.teacherId === parseInt(filterTeacher));
+    if (filterYear !== 'all') filtered = filtered.filter(cls => cls.academicYear === filterYear);
+    setFilteredClasses(filtered);
+  };
+
+  const clearFilters = () => { setSearchTerm(''); setFilterTeacher('all'); setFilterYear('all'); };
+  const academicYears = [...new Set(classes.map(cls => cls.academicYear).filter(Boolean))];
+  const totalStudents = classes.reduce((acc, cls) => acc + (cls.studentCount || 0), 0);
+
   const handleOpenModal = (classItem = null) => {
     if (classItem) {
       setEditingClass(classItem);
-      setFormData({
-        className: classItem.className,
-        subject: classItem.subject,
-        section: classItem.section || '',
-        academicYear: classItem.academicYear || defaultAcademicYear,
-        teacherId: classItem.teacherId || ''
-      });
+      setFormData({ className: classItem.className, subject: classItem.subject, section: classItem.section || '', academicYear: classItem.academicYear || defaultAcademicYear, teacherId: classItem.teacherId || '' });
     } else {
       setEditingClass(null);
       setFormData({ className: '', subject: '', section: '', academicYear: defaultAcademicYear, teacherId: '' });
@@ -78,11 +95,7 @@ const ManageClasses = () => {
     setError('');
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingClass(null);
-    setFormData({ className: '', subject: '', section: '', academicYear: defaultAcademicYear, teacherId: '' });
-  };
+  const handleCloseModal = () => { setShowModal(false); setEditingClass(null); setFormData({ className: '', subject: '', section: '', academicYear: defaultAcademicYear, teacherId: '' }); };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -94,29 +107,11 @@ const ManageClasses = () => {
     setLoading(true);
     setError('');
     try {
-      if (!formData.className || !formData.subject || !formData.teacherId) {
-        throw new Error('Please fill in all required fields');
-      }
-      const classData = {
-        className: formData.className,
-        subject: formData.subject,
-        section: formData.section,
-        academicYear: formData.academicYear,
-        teacherId: parseInt(formData.teacherId)
-      };
-      let response;
-      if (editingClass) {
-        response = await classService.updateClass(editingClass.classId, classData);
-      } else {
-        response = await classService.createClass(classData);
-      }
-      if (response.success) {
-        alert(editingClass ? 'Class updated successfully!' : 'Class created successfully!');
-        handleCloseModal();
-        fetchData();
-      } else {
-        setError(response.message || 'Failed to save class');
-      }
+      if (!formData.className || !formData.subject || !formData.teacherId) throw new Error('Please fill in all required fields');
+      const classData = { className: formData.className, subject: formData.subject, section: formData.section, academicYear: formData.academicYear, teacherId: parseInt(formData.teacherId) };
+      const response = editingClass ? await classService.updateClass(editingClass.classId, classData) : await classService.createClass(classData);
+      if (response.success) { handleCloseModal(); fetchData(); }
+      else setError(response.message || 'Failed to save class');
     } catch (err) {
       setError(err.message || 'An error occurred');
     } finally {
@@ -129,17 +124,9 @@ const ManageClasses = () => {
     setLoading(true);
     try {
       const response = await classService.deleteClass(classId);
-      if (response.success) {
-        alert('Class deleted successfully');
-        fetchData();
-      } else {
-        setError('Failed to delete class');
-      }
-    } catch (err) {
-      setError('Error deleting class');
-    } finally {
-      setLoading(false);
-    }
+      if (response.success) fetchData();
+      else setError('Failed to delete class');
+    } catch { setError('Error deleting class'); } finally { setLoading(false); }
   };
 
   const handleViewStudents = async (classItem) => {
@@ -147,30 +134,13 @@ const ManageClasses = () => {
     setLoading(true);
     try {
       const response = await classService.getStudentsInClass(classItem.classId);
-      if (response.success) {
-        setClassStudents(response.data);
-        setShowStudentsModal(true);
-      } else {
-        setError('Failed to load students');
-      }
-    } catch (err) {
-      setError('Error loading students');
-    } finally {
-      setLoading(false);
-    }
+      if (response.success) { setClassStudents(response.data); setShowStudentsModal(true); }
+      else setError('Failed to load students');
+    } catch { setError('Error loading students'); } finally { setLoading(false); }
   };
 
-  // ── Add Student handlers ──────────────────────────────────────────
-  const handleOpenAddStudent = () => {
-    setStudentForm({ firstName: '', lastName: '', rollNumber: '', email: '', phone: '' });
-    setStudentError('');
-    setShowAddStudentModal(true);
-  };
-
-  const handleCloseAddStudent = () => {
-    setShowAddStudentModal(false);
-    setStudentError('');
-  };
+  const handleOpenAddStudent = () => { setStudentForm({ firstName: '', lastName: '', rollNumber: '', email: '', phone: '' }); setStudentError(''); setShowAddStudentModal(true); };
+  const handleCloseAddStudent = () => { setShowAddStudentModal(false); setStudentError(''); };
 
   const handleStudentInputChange = (e) => {
     const { name, value } = e.target;
@@ -182,77 +152,115 @@ const ManageClasses = () => {
     setStudentError('');
     setStudentLoading(true);
     try {
-      if (!studentForm.firstName || !studentForm.lastName || !studentForm.rollNumber) {
-        throw new Error('First name, last name, and roll number are required.');
-      }
-
-      const payload = {
-        firstName: studentForm.firstName,
-        lastName: studentForm.lastName,
-        rollNumber: studentForm.rollNumber,
-        email: studentForm.email || null,
-        phone: studentForm.phone || null,
-        classId: selectedClass.classId,  // auto-assign to current class
-      };
-
+      if (!studentForm.firstName || !studentForm.lastName || !studentForm.rollNumber) throw new Error('First name, last name, and roll number are required.');
+      const payload = { firstName: studentForm.firstName, lastName: studentForm.lastName, rollNumber: studentForm.rollNumber, email: studentForm.email || null, phone: studentForm.phone || null, classId: selectedClass.classId };
       const response = await studentService.createStudent(payload);
-
       if (response.success) {
-        // Refresh the students list
         const updated = await classService.getStudentsInClass(selectedClass.classId);
         if (updated.success) setClassStudents(updated.data);
-        // Update count on class card
         fetchData();
         handleCloseAddStudent();
-      } else {
-        setStudentError(response.message || 'Failed to add student');
-      }
-    } catch (err) {
-      setStudentError(err.message || 'An error occurred');
-    } finally {
-      setStudentLoading(false);
-    }
+      } else { setStudentError(response.message || 'Failed to add student'); }
+    } catch (err) { setStudentError(err.message || 'An error occurred'); } finally { setStudentLoading(false); }
   };
 
   const handleRemoveStudent = async (studentId) => {
     if (!window.confirm('Remove this student from the class?')) return;
     try {
       const response = await studentService.removeFromClass(studentId);
-      if (response.success) {
-        setClassStudents(prev => prev.filter(s => s.studentId !== studentId));
-        fetchData();
-      }
-    } catch (err) {
-      setError('Error removing student');
-    }
+      if (response.success) { setClassStudents(prev => prev.filter(s => s.studentId !== studentId)); fetchData(); }
+    } catch { setError('Error removing student'); }
   };
-  // ─────────────────────────────────────────────────────────────────
 
   const getTeacherName = (teacherId) => {
     const teacher = teachers.find(t => t.userId === teacherId);
     return teacher ? teacher.fullName : 'Unassigned';
   };
 
-  if (loading && classes.length === 0) {
-    return <div className="loading">Loading classes...</div>;
-  }
+  if (loading && classes.length === 0) return <div className="loading">Loading classes...</div>;
 
   return (
     <div className="manage-classes">
-      <div className="classes-header">
-        <h2>Manage Classes</h2>
-        <button className="btn-primary" onClick={() => handleOpenModal()}>+ Add New Class</button>
+
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="header-left">
+          <h1>Manage Classes</h1>
+          <p className="page-description">Create and organize classes, assign teachers, and manage student enrollment</p>
+        </div>
+        <button className="btn-primary" onClick={() => handleOpenModal()}>
+          <span className="btn-icon-small">+</span> New Class
+        </button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
 
+      {/* Stats */}
+      <div className="stats-summary">
+        <div className="stat-summary-item">
+          <div className="stat-icon-wrap blue">🏫</div>
+          <div>
+            <span className="stat-summary-value">{classes.length}</span>
+            <span className="stat-summary-label">Total Classes</span>
+          </div>
+        </div>
+        <div className="stat-summary-item">
+          <div className="stat-icon-wrap green">👨‍🏫</div>
+          <div>
+            <span className="stat-summary-value">{teachers.length}</span>
+            <span className="stat-summary-label">Active Teachers</span>
+          </div>
+        </div>
+        <div className="stat-summary-item">
+          <div className="stat-icon-wrap purple">🎓</div>
+          <div>
+            <span className="stat-summary-value">{totalStudents}</span>
+            <span className="stat-summary-label">Total Students</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Compact Search & Filter Toolbar */}
+      <div className="search-filter-bar">
+        <div className="search-box">
+          <span className="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Search classes by name, subject, or section..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          {searchTerm && <button className="clear-search" onClick={() => setSearchTerm('')}>✕</button>}
+        </div>
+        <div className="toolbar-divider" />
+        <select className="filter-select" value={filterTeacher} onChange={(e) => setFilterTeacher(e.target.value)}>
+          <option value="all">All Teachers</option>
+          {teachers.map(teacher => <option key={teacher.userId} value={teacher.userId}>{teacher.fullName}</option>)}
+        </select>
+        <div className="toolbar-divider" />
+        <select className="filter-select" value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
+          <option value="all">All Years</option>
+          {academicYears.map(year => <option key={year} value={year}>{year}</option>)}
+        </select>
+        {(searchTerm || filterTeacher !== 'all' || filterYear !== 'all') && (
+          <button className="clear-filters-btn" onClick={clearFilters}>Clear</button>
+        )}
+      </div>
+
+      <div className="results-count">
+        Showing <strong>{filteredClasses.length}</strong> of <strong>{classes.length}</strong> classes
+      </div>
+
+      {/* Classes Grid */}
       <div className="classes-grid">
-        {classes.length === 0 ? (
+        {filteredClasses.length === 0 ? (
           <div className="empty-state">
-            <p>No classes found. Click "Add New Class" to create one.</p>
+            <p>No classes match your filters. Try adjusting your search criteria.</p>
+            <button className="btn-outline" onClick={clearFilters}>Clear Filters</button>
           </div>
         ) : (
-          classes.map(cls => (
+          filteredClasses.map(cls => (
             <div key={cls.classId} className="class-card">
               <div className="class-card-header">
                 <h3>{cls.className}</h3>
@@ -291,7 +299,7 @@ const ManageClasses = () => {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editingClass ? 'Edit Class' : 'Add New Class'}</h3>
+              <h3>{editingClass ? 'Edit Class' : 'Create New Class'}</h3>
               <button className="modal-close" onClick={handleCloseModal}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -320,19 +328,13 @@ const ManageClasses = () => {
                   <label className="form-label">Assign Teacher *</label>
                   <select name="teacherId" className="form-input" value={formData.teacherId} onChange={handleInputChange} required>
                     <option value="">Select a teacher</option>
-                    {teachers.map(teacher => (
-                      <option key={teacher.userId} value={teacher.userId}>
-                        {teacher.fullName} ({teacher.email})
-                      </option>
-                    ))}
+                    {teachers.map(teacher => <option key={teacher.userId} value={teacher.userId}>{teacher.fullName} ({teacher.email})</option>)}
                   </select>
                 </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-outline" onClick={handleCloseModal}>Cancel</button>
-                <button type="submit" className="btn-primary" disabled={loading}>
-                  {loading ? 'Saving...' : (editingClass ? 'Update Class' : 'Create Class')}
-                </button>
+                <button type="submit" className="btn-primary" disabled={loading}>{loading ? 'Saving...' : (editingClass ? 'Update Class' : 'Create Class')}</button>
               </div>
             </form>
           </div>
@@ -349,18 +351,11 @@ const ManageClasses = () => {
             </div>
             <div className="modal-body">
               {classStudents.length === 0 ? (
-                <div className="empty-state">
-                  <p>No students enrolled in this class yet.</p>
-                </div>
+                <div className="empty-state"><p>No students enrolled in this class yet.</p></div>
               ) : (
                 <table className="students-table">
                   <thead>
-                    <tr>
-                      <th>Roll No.</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Actions</th>
-                    </tr>
+                    <tr><th>Roll No.</th><th>Name</th><th>Email</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
                     {classStudents.map(student => (
@@ -368,13 +363,7 @@ const ManageClasses = () => {
                         <td>{student.rollNumber}</td>
                         <td>{student.fullName}</td>
                         <td>{student.email || '—'}</td>
-                        <td>
-                          <button
-                            className="btn-icon"
-                            title="Remove from class"
-                            onClick={() => handleRemoveStudent(student.studentId)}
-                          >➖</button>
-                        </td>
+                        <td><button className="btn-icon delete" title="Remove from class" onClick={() => handleRemoveStudent(student.studentId)}>➖</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -382,7 +371,6 @@ const ManageClasses = () => {
               )}
             </div>
             <div className="modal-footer">
-              {/* ✅ onClick now opens the Add Student modal */}
               <button className="btn-primary" onClick={handleOpenAddStudent}>+ Add Student</button>
               <button className="btn-outline" onClick={() => setShowStudentsModal(false)}>Close</button>
             </div>
@@ -424,9 +412,7 @@ const ManageClasses = () => {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-outline" onClick={handleCloseAddStudent}>Cancel</button>
-                <button type="submit" className="btn-primary" disabled={studentLoading}>
-                  {studentLoading ? 'Adding...' : 'Add Student'}
-                </button>
+                <button type="submit" className="btn-primary" disabled={studentLoading}>{studentLoading ? 'Adding...' : 'Add Student'}</button>
               </div>
             </form>
           </div>
