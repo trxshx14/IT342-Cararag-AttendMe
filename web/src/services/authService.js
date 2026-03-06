@@ -6,7 +6,7 @@ export const authService = {
       const username = email.split('@')[0];
       
       const response = await api.post('/auth/login', {
-        username,
+        email,
         password,
       });
       

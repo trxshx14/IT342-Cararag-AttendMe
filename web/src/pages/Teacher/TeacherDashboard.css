@@ -1,0 +1,490 @@
+.teacher-dashboard {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Welcome Section */
+.welcome-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  padding: 28px 36px;
+  border-radius: 20px;
+  color: white;
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+}
+
+.welcome-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  font-family: 'DM Serif Display', serif;
+}
+
+.welcome-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.date-badge-large {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 10px 20px;
+  border-radius: 40px;
+  font-size: 0.95rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Quick Actions Bar */
+.quick-actions-bar {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.quick-action-btn.primary {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: white;
+}
+
+.quick-action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(59, 130, 246, 0.3);
+}
+
+.quick-action-btn.secondary {
+  background: white;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+}
+
+.quick-action-btn.secondary:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+}
+
+.btn-icon {
+  font-size: 1.2rem;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  padding: 22px;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s;
+  border: 1px solid #e2e8f0;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+  border-color: #3b82f6;
+}
+
+.stat-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  color: white;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.stat-trend {
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.card-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.view-all-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.view-all-btn:hover {
+  background: #e2e8f0;
+  color: #1e40af;
+}
+
+.date-badge {
+  background: #e2e8f0;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+/* Classes List */
+.classes-list {
+  padding: 8px 0;
+}
+
+.class-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.2s;
+}
+
+.class-item:hover {
+  background: #f8fafc;
+}
+
+.class-item:last-child {
+  border-bottom: none;
+}
+
+.class-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.class-info p {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.class-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.attendance-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.present-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+}
+
+.progress-ring {
+  position: relative;
+  width: 50px;
+  height: 50px;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Schedule List */
+.schedule-list {
+  padding: 8px 0;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 22px;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.2s;
+}
+
+.schedule-item:hover {
+  background: #f8fafc;
+}
+
+.schedule-item:last-child {
+  border-bottom: none;
+}
+
+.schedule-time {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3b82f6;
+  min-width: 70px;
+}
+
+.schedule-info {
+  flex: 1;
+}
+
+.schedule-info h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.schedule-info p {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.schedule-action {
+  background: #e2e8f0;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.schedule-action:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+/* Activity List */
+.activity-list {
+  padding: 8px 0;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 22px;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.2s;
+}
+
+.activity-item:hover {
+  background: #f8fafc;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  width: 32px;
+  height: 32px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.activity-details {
+  flex: 1;
+}
+
+.activity-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.activity-desc {
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0 0 4px 0;
+}
+
+.activity-time {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-section {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    padding: 24px;
+  }
+  
+  .quick-actions-bar {
+    flex-direction: column;
+  }
+  
+  .quick-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .class-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .class-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Hover Effects */
+.class-item, .schedule-item, .activity-item {
+  cursor: pointer;
+}
+
+.class-item:hover .class-info h4,
+.schedule-item:hover .schedule-info h4,
+.activity-item:hover .activity-title {
+  color: #3b82f6;
+}

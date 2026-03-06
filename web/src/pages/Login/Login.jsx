@@ -4,60 +4,53 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { authService } from '../../services/authService';
 import './Login.css';
 import logo from '../../assets/logo.png';
+import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-  });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();  // ✅ ADD THIS
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  try {
-    console.log('1️⃣ Attempting login...');
-    const response = await authService.login(form.email, form.password);
-    console.log('2️⃣ Login response:', response);
+    try {
+      const response = await authService.login(form.email, form.password);
 
-    if (response.success) {
-      // ✅ Use data directly from login response — no second API call needed
-      const user = response.data;
-      console.log('3️⃣ User data:', user);
+      if (response.success) {
+        const user = response.data;
 
-      const userData = {
-        id: user.userId,
-        name: user.username || user.fullName,
-        email: user.email,
-        role: user.role.toLowerCase(),
-        avatar: (user.username || user.fullName || 'U')
-          .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-      };
+        const userData = {
+          id: user.userId,
+          name: user.username || user.fullName,
+          email: user.email,
+          role: user.role.toLowerCase(),
+          avatar: (user.username || user.fullName || 'U')
+            .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+        };
 
-      localStorage.setItem('user', JSON.stringify(userData));
-      console.log('4️⃣ User stored:', userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        login(userData);  // ✅ ADD THIS — tells AuthContext the user is logged in
 
-      const redirectPath = user.role.toLowerCase() === 'admin'
-        ? '/admin/dashboard'
-        : '/teacher/dashboard';
+        const redirectPath = user.role.toLowerCase() === 'admin'
+          ? '/admin/dashboard'
+          : '/teacher/dashboard';
 
-      console.log('5️⃣ Redirecting to:', redirectPath);
-      navigate(redirectPath, { replace: true });
-
-    } else {
-      setError(response.message || 'Invalid email or password');
+        navigate(redirectPath, { replace: true });
+      } else {
+        setError(response.message || 'Invalid email or password');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('❌ Login error:', err);
+      setError(err.message || 'Unable to connect to server. Please try again.');
       setLoading(false);
     }
-  } catch (err) {
-    console.error('❌ Login error:', err);
-    setError(err.message || 'Unable to connect to server. Please try again.');
-    setLoading(false);
-  }
-};
+  };
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {

@@ -1,85 +1,219 @@
 import React, { useState, useEffect } from 'react';
-import { attendanceService } from '../../services/attendanceService';
-import { classService } from '../../services/classService';
+import { useNavigate } from 'react-router-dom';
 import './AdminReports.css';
 
 const AdminReports = () => {
   const [classes, setClasses] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
+  const [selectedTeacher, setSelectedTeacher] = useState('all');
   const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0]
   });
   const [reportData, setReportData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [reportLoading, setReportLoading] = useState(false);
   const [error, setError] = useState('');
-  const [viewMode, setViewMode] = useState('daily'); // 'daily', 'weekly', 'monthly'
+  const [viewMode, setViewMode] = useState('daily'); // 'daily', 'weekly', 'monthly', 'teacher'
+  const [summary, setSummary] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchClasses();
+    fetchInitialData();
   }, []);
 
-  const fetchClasses = async () => {
-    try {
-      const response = await classService.getAllClasses();
-      if (response.success) {
-        setClasses(response.data);
-      }
-    } catch (err) {
-      console.error('Error fetching classes:', err);
-    }
-  };
-
-  const generateReport = async () => {
-    if (!selectedClass) {
-      setError('Please select a class');
-      return;
-    }
-
+  const fetchInitialData = async () => {
     setLoading(true);
-    setError('');
-
     try {
-      let response;
+      const token = localStorage.getItem('accessToken');
       
-      if (viewMode === 'daily') {
-        // For daily view, use specific date
-        response = await attendanceService.getDailyReport(selectedClass, dateRange.startDate);
-      } else {
-        // For weekly/monthly, get range data
-        response = await attendanceService.getAttendanceByClassAndDateRange(
-          selectedClass, 
-          dateRange.startDate, 
-          dateRange.endDate
-        );
-      }
+      // Fetch classes and teachers in parallel
+      const [classesRes, teachersRes] = await Promise.all([
+        fetch('http://localhost:8888/api/classes', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch('http://localhost:8888/api/users/role/TEACHER', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
 
-      if (response.success) {
-        setReportData(response.data);
-      } else {
-        setError('Failed to generate report');
+      const classesData = await classesRes.json();
+      const teachersData = await teachersRes.json();
+
+      if (classesData.success) {
+        setClasses(classesData.data || []);
+      }
+      
+      if (teachersData.success) {
+        setTeachers(teachersData.data || []);
       }
     } catch (err) {
-      setError('Error generating report');
-      console.error(err);
+      console.error('Error fetching data:', err);
+      setError('Failed to load initial data');
     } finally {
       setLoading(false);
     }
   };
 
-  const exportToCSV = () => {
-    if (!reportData) return;
+  const generateReport = async () => {
+    if (!selectedClass && viewMode !== 'teacher') {
+      setError('Please select a class');
+      return;
+    }
 
-    let csvContent = "Date,Student Name,Status,Remarks\n";
+    setReportLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      let response;
+      let data;
+
+      if (viewMode === 'teacher') {
+        // Teacher performance report
+        if (selectedTeacher === 'all') {
+          // Get all teachers' classes
+          const teacherPromises = teachers.map(async (teacher) => {
+            const classRes = await fetch(`http://localhost:8888/api/classes/teacher/${teacher.userId}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const classData = await classRes.json();
+            return {
+              teacherId: teacher.userId,
+              teacherName: teacher.fullName,
+              classes: classData.data || [],
+              classCount: classData.data?.length || 0
+            };
+          });
+          
+          const teacherData = await Promise.all(teacherPromises);
+          setReportData(teacherData);
+          
+          // Calculate summary
+          const totalTeachers = teacherData.length;
+          const totalClasses = teacherData.reduce((acc, t) => acc + t.classCount, 0);
+          const avgClassesPerTeacher = totalTeachers > 0 ? Math.round(totalClasses / totalTeachers) : 0;
+          
+          setSummary({
+            totalTeachers,
+            totalClasses,
+            avgClassesPerTeacher
+          });
+        } else {
+          // Get specific teacher's classes
+          const classRes = await fetch(`http://localhost:8888/api/classes/teacher/${selectedTeacher}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const classData = await classRes.json();
+          
+          const teacher = teachers.find(t => t.userId === parseInt(selectedTeacher));
+          
+          setReportData([{
+            teacherId: selectedTeacher,
+            teacherName: teacher?.fullName || 'Unknown Teacher',
+            classes: classData.data || [],
+            classCount: classData.data?.length || 0
+          }]);
+          
+          setSummary({
+            totalTeachers: 1,
+            totalClasses: classData.data?.length || 0,
+            avgClassesPerTeacher: classData.data?.length || 0
+          });
+        }
+        setAttendanceRecords([]);
+        setReportLoading(false);
+        return;
+      }
+
+      // Daily/Weekly/Monthly attendance report
+      if (viewMode === 'daily') {
+        response = await fetch(`http://localhost:8888/api/attendance/class/${selectedClass}/report/${dateRange.startDate}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        data = await response.json();
+        
+        if (data.success) {
+          setReportData(data.data);
+          setAttendanceRecords(data.data?.attendanceList || []);
+          
+          // Calculate summary
+          const records = data.data?.attendanceList || [];
+          const present = records.filter(r => r.status === 'present').length;
+          const absent = records.filter(r => r.status === 'absent').length;
+          const late = records.filter(r => r.status === 'late').length;
+          const excused = records.filter(r => r.status === 'excused').length;
+          
+          setSummary({
+            total: records.length,
+            present,
+            absent,
+            late,
+            excused,
+            presentRate: records.length > 0 ? Math.round((present / records.length) * 100) : 0,
+            absentRate: records.length > 0 ? Math.round((absent / records.length) * 100) : 0,
+            lateRate: records.length > 0 ? Math.round((late / records.length) * 100) : 0,
+            excusedRate: records.length > 0 ? Math.round((excused / records.length) * 100) : 0
+          });
+        }
+      } else {
+        // For weekly/monthly, get range data
+        response = await fetch(
+          `http://localhost:8888/api/attendance/class/${selectedClass}/range?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`, 
+          {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        );
+        data = await response.json();
+        
+        if (data.success) {
+          setAttendanceRecords(data.data || []);
+          
+          // Calculate summary for range
+          const records = data.data || [];
+          const present = records.filter(r => r.status === 'present').length;
+          const absent = records.filter(r => r.status === 'absent').length;
+          const late = records.filter(r => r.status === 'late').length;
+          const excused = records.filter(r => r.status === 'excused').length;
+          
+          setSummary({
+            total: records.length,
+            present,
+            absent,
+            late,
+            excused,
+            presentRate: records.length > 0 ? Math.round((present / records.length) * 100) : 0,
+            absentRate: records.length > 0 ? Math.round((absent / records.length) * 100) : 0,
+            lateRate: records.length > 0 ? Math.round((late / records.length) * 100) : 0,
+            excusedRate: records.length > 0 ? Math.round((excused / records.length) * 100) : 0
+          });
+        }
+      }
+
+    } catch (err) {
+      console.error('Error generating report:', err);
+      setError('Failed to generate report');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const exportToCSV = () => {
+    if (!attendanceRecords.length && !reportData) return;
+
+    let csvContent = "Data,Value\n";
     
-    if (viewMode === 'daily' && reportData.attendanceList) {
-      reportData.attendanceList.forEach(record => {
-        csvContent += `${reportData.date},${record.studentName},${record.status},${record.remarks || ''}\n`;
+    if (viewMode === 'teacher') {
+      csvContent = "Teacher,Classes\n";
+      reportData.forEach(teacher => {
+        csvContent += `${teacher.teacherName},${teacher.classCount}\n`;
       });
-    } else if (reportData) {
-      // Handle range data format
-      reportData.forEach(record => {
-        csvContent += `${record.date},${record.studentName},${record.status},${record.remarks || ''}\n`;
+    } else {
+      csvContent = "Date,Student Name,Roll Number,Status,Remarks\n";
+      attendanceRecords.forEach(record => {
+        csvContent += `${record.date || dateRange.startDate},${record.studentName},${record.rollNumber},${record.status},${record.remarks || ''}\n`;
       });
     }
 
@@ -87,157 +221,138 @@ const AdminReports = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `attendance-report-${selectedClass}-${dateRange.startDate}.csv`;
+    a.download = `report-${viewMode}-${dateRange.startDate}.csv`;
     a.click();
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      PRESENT: '#22c55e',
-      ABSENT: '#ef4444',
-      LATE: '#f59e0b',
-      EXCUSED: '#6366f1'
+      present: '#10b981',
+      absent: '#ef4444',
+      late: '#f59e0b',
+      excused: '#8b5cf6'
     };
-    return colors[status?.toUpperCase()] || '#64748b';
+    return colors[status?.toLowerCase()] || '#64748b';
   };
 
   const getStatusBg = (status) => {
     const colors = {
-      PRESENT: '#dcfce7',
-      ABSENT: '#fee2e2',
-      LATE: '#fef3c7',
-      EXCUSED: '#ede9fe'
+      present: '#d1fae5',
+      absent: '#fee2e2',
+      late: '#fef3c7',
+      excused: '#ede9fe'
     };
-    return colors[status?.toUpperCase()] || '#f1f5f9';
+    return colors[status?.toLowerCase()] || '#f1f5f9';
   };
 
-  const calculateSummary = () => {
-    if (!reportData) return null;
-
-    let total = 0;
-    let present = 0;
-    let absent = 0;
-    let late = 0;
-    let excused = 0;
-
-    if (viewMode === 'daily' && reportData.attendanceList) {
-      reportData.attendanceList.forEach(record => {
-        total++;
-        switch(record.status?.toUpperCase()) {
-          case 'PRESENT': present++; break;
-          case 'ABSENT': absent++; break;
-          case 'LATE': late++; break;
-          case 'EXCUSED': excused++; break;
-          default: break;
-        }
-      });
-    } else if (reportData) {
-      // Calculate from range data
-      reportData.forEach(record => {
-        total++;
-        switch(record.status?.toUpperCase()) {
-          case 'PRESENT': present++; break;
-          case 'ABSENT': absent++; break;
-          case 'LATE': late++; break;
-          case 'EXCUSED': excused++; break;
-          default: break;
-        }
-      });
-    }
-
-    return {
-      total,
-      present,
-      absent,
-      late,
-      excused,
-      presentRate: total > 0 ? Math.round((present / total) * 100) : 0,
-      absentRate: total > 0 ? Math.round((absent / total) * 100) : 0,
-      lateRate: total > 0 ? Math.round((late / total) * 100) : 0,
-      excusedRate: total > 0 ? Math.round((excused / total) * 100) : 0
-    };
-  };
-
-  const summary = calculateSummary();
+  if (loading) {
+    return <div className="loading">Loading reports...</div>;
+  }
 
   return (
     <div className="admin-reports">
       <div className="reports-header">
-        <h2>Attendance Reports</h2>
+        <h1>Reports & Analytics</h1>
+        <p className="page-description">Generate and analyze attendance reports, teacher performance, and class statistics</p>
       </div>
 
-      {/* Filters */}
-      <div className="reports-filters">
+      {/* Report Type Selector */}
+      <div className="report-type-selector">
+        <button
+          className={`type-btn ${viewMode === 'daily' ? 'active' : ''}`}
+          onClick={() => setViewMode('daily')}
+        >
+          📅 Daily Report
+        </button>
+        <button
+          className={`type-btn ${viewMode === 'weekly' ? 'active' : ''}`}
+          onClick={() => setViewMode('weekly')}
+        >
+          📊 Weekly Report
+        </button>
+        <button
+          className={`type-btn ${viewMode === 'monthly' ? 'active' : ''}`}
+          onClick={() => setViewMode('monthly')}
+        >
+          📈 Monthly Report
+        </button>
+        <button
+          className={`type-btn ${viewMode === 'teacher' ? 'active' : ''}`}
+          onClick={() => setViewMode('teacher')}
+        >
+          👥 Teacher Performance
+        </button>
+      </div>
+
+      {/* Filters Section */}
+      <div className="filters-section">
+        {viewMode !== 'teacher' && (
+          <div className="filter-group">
+            <label className="filter-label">Select Class</label>
+            <select
+              className="filter-select"
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+            >
+              <option value="">Choose a class</option>
+              {classes.map(cls => (
+                <option key={cls.classId} value={cls.classId}>
+                  {cls.className} - {cls.subject}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {viewMode === 'teacher' && (
+          <div className="filter-group">
+            <label className="filter-label">Select Teacher</label>
+            <select
+              className="filter-select"
+              value={selectedTeacher}
+              onChange={(e) => setSelectedTeacher(e.target.value)}
+            >
+              <option value="all">All Teachers</option>
+              {teachers.map(teacher => (
+                <option key={teacher.userId} value={teacher.userId}>
+                  {teacher.fullName}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="filter-group">
-          <label className="filter-label">Class</label>
-          <select
-            className="filter-select"
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-          >
-            <option value="">Select a class</option>
-            {classes.map(cls => (
-              <option key={cls.classId} value={cls.classId}>
-                {cls.className} - {cls.subject}
-              </option>
-            ))}
-          </select>
+          <label className="filter-label">Start Date</label>
+          <input
+            type="date"
+            className="date-input"
+            value={dateRange.startDate}
+            onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
+          />
         </div>
 
         <div className="filter-group">
-          <label className="filter-label">View Mode</label>
-          <div className="view-mode-buttons">
-            <button
-              className={`mode-btn ${viewMode === 'daily' ? 'active' : ''}`}
-              onClick={() => setViewMode('daily')}
-            >
-              Daily
-            </button>
-            <button
-              className={`mode-btn ${viewMode === 'weekly' ? 'active' : ''}`}
-              onClick={() => setViewMode('weekly')}
-            >
-              Weekly
-            </button>
-            <button
-              className={`mode-btn ${viewMode === 'monthly' ? 'active' : ''}`}
-              onClick={() => setViewMode('monthly')}
-            >
-              Monthly
-            </button>
-          </div>
-        </div>
-
-        <div className="filter-group">
-          <label className="filter-label">Date Range</label>
-          <div className="date-range">
-            <input
-              type="date"
-              className="date-input"
-              value={dateRange.startDate}
-              onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-            />
-            <span className="date-separator">to</span>
-            <input
-              type="date"
-              className="date-input"
-              value={dateRange.endDate}
-              onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-            />
-          </div>
+          <label className="filter-label">End Date</label>
+          <input
+            type="date"
+            className="date-input"
+            value={dateRange.endDate}
+            onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
+          />
         </div>
 
         <div className="filter-actions">
           <button 
-            className="btn-primary"
+            className="generate-btn"
             onClick={generateReport}
-            disabled={loading || !selectedClass}
+            disabled={reportLoading}
           >
-            {loading ? 'Generating...' : 'Generate Report'}
+            {reportLoading ? 'Generating...' : 'Generate Report'}
           </button>
-          {reportData && (
+          {(attendanceRecords.length > 0 || reportData) && (
             <button 
-              className="btn-outline"
+              className="export-btn"
               onClick={exportToCSV}
             >
               📥 Export CSV
@@ -249,182 +364,185 @@ const AdminReports = () => {
       {error && <div className="error-message">{error}</div>}
 
       {/* Summary Cards */}
-      {summary && reportData && (
+      {summary && (
         <div className="summary-cards">
           <div className="summary-card total">
             <div className="summary-icon">📊</div>
             <div className="summary-info">
-              <div className="summary-value">{summary.total}</div>
-              <div className="summary-label">Total Records</div>
+              <span className="summary-value">{summary.total || summary.totalTeachers}</span>
+              <span className="summary-label">
+                {viewMode === 'teacher' ? 'Total Teachers' : 'Total Records'}
+              </span>
             </div>
           </div>
 
-          <div className="summary-card present">
-            <div className="summary-icon">✅</div>
-            <div className="summary-info">
-              <div className="summary-value">{summary.present}</div>
-              <div className="summary-label">Present</div>
-              <div className="summary-percent">{summary.presentRate}%</div>
-            </div>
-          </div>
+          {viewMode !== 'teacher' && (
+            <>
+              <div className="summary-card present">
+                <div className="summary-icon">✅</div>
+                <div className="summary-info">
+                  <span className="summary-value">{summary.present || 0}</span>
+                  <span className="summary-label">Present</span>
+                  <span className="summary-percent">{summary.presentRate || 0}%</span>
+                </div>
+              </div>
 
-          <div className="summary-card absent">
-            <div className="summary-icon">❌</div>
-            <div className="summary-info">
-              <div className="summary-value">{summary.absent}</div>
-              <div className="summary-label">Absent</div>
-              <div className="summary-percent">{summary.absentRate}%</div>
-            </div>
-          </div>
+              <div className="summary-card absent">
+                <div className="summary-icon">❌</div>
+                <div className="summary-info">
+                  <span className="summary-value">{summary.absent || 0}</span>
+                  <span className="summary-label">Absent</span>
+                  <span className="summary-percent">{summary.absentRate || 0}%</span>
+                </div>
+              </div>
 
-          <div className="summary-card late">
-            <div className="summary-icon">⏰</div>
-            <div className="summary-info">
-              <div className="summary-value">{summary.late}</div>
-              <div className="summary-label">Late</div>
-              <div className="summary-percent">{summary.lateRate}%</div>
-            </div>
-          </div>
+              <div className="summary-card late">
+                <div className="summary-icon">⏰</div>
+                <div className="summary-info">
+                  <span className="summary-value">{summary.late || 0}</span>
+                  <span className="summary-label">Late</span>
+                  <span className="summary-percent">{summary.lateRate || 0}%</span>
+                </div>
+              </div>
 
-          <div className="summary-card excused">
-            <div className="summary-icon">📝</div>
-            <div className="summary-info">
-              <div className="summary-value">{summary.excused}</div>
-              <div className="summary-label">Excused</div>
-              <div className="summary-percent">{summary.excusedRate}%</div>
-            </div>
-          </div>
+              <div className="summary-card excused">
+                <div className="summary-icon">📝</div>
+                <div className="summary-info">
+                  <span className="summary-value">{summary.excused || 0}</span>
+                  <span className="summary-label">Excused</span>
+                  <span className="summary-percent">{summary.excusedRate || 0}%</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {viewMode === 'teacher' && (
+            <>
+              <div className="summary-card classes">
+                <div className="summary-icon">📚</div>
+                <div className="summary-info">
+                  <span className="summary-value">{summary.totalClasses || 0}</span>
+                  <span className="summary-label">Total Classes</span>
+                </div>
+              </div>
+
+              <div className="summary-card average">
+                <div className="summary-icon">📈</div>
+                <div className="summary-info">
+                  <span className="summary-value">{summary.avgClassesPerTeacher || 0}</span>
+                  <span className="summary-label">Avg Classes/Teacher</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
-      {/* Report Table */}
-      {reportData && (
+      {/* Teacher Performance Table */}
+      {viewMode === 'teacher' && reportData && (
         <div className="report-table-container">
-          <h3>
-            {viewMode === 'daily' 
-              ? `Attendance Report for ${new Date(dateRange.startDate).toLocaleDateString('en-PH', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}`
-              : `Attendance Report from ${new Date(dateRange.startDate).toLocaleDateString()} to ${new Date(dateRange.endDate).toLocaleDateString()}`
-            }
-          </h3>
-
+          <h3>Teacher Performance Summary</h3>
           <div className="table-responsive">
             <table className="report-table">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Student Name</th>
-                  <th>Student ID</th>
-                  <th>Status</th>
-                  <th>Remarks</th>
+                  <th>Teacher Name</th>
+                  <th>Classes Assigned</th>
+                  <th>Total Students</th>
+                  <th>Performance</th>
                 </tr>
               </thead>
               <tbody>
-                {viewMode === 'daily' && reportData.attendanceList ? (
-                  reportData.attendanceList.map((record, index) => (
-                    <tr key={index}>
-                      <td>{new Date(reportData.date).toLocaleDateString()}</td>
-                      <td>{record.studentName}</td>
-                      <td>{record.rollNumber}</td>
-                      <td>
-                        <span 
-                          className="status-badge"
+                {reportData.map((teacher, index) => (
+                  <tr key={index}>
+                    <td className="teacher-cell">
+                      <div className="teacher-avatar-small">
+                        {teacher.teacherName.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      {teacher.teacherName}
+                    </td>
+                    <td className="text-center">{teacher.classCount}</td>
+                    <td className="text-center">
+                      {teacher.classes.reduce((acc, cls) => acc + (cls.studentCount || 0), 0)}
+                    </td>
+                    <td>
+                      <div className="performance-bar">
+                        <div 
+                          className="performance-fill"
                           style={{ 
-                            background: getStatusBg(record.status),
-                            color: getStatusColor(record.status)
+                            width: `${Math.min(100, (teacher.classCount / 5) * 100)}%`,
+                            background: teacher.classCount > 3 ? '#10b981' : teacher.classCount > 1 ? '#f59e0b' : '#ef4444'
                           }}
-                        >
-                          <span 
-                            className="status-dot" 
-                            style={{ background: getStatusColor(record.status) }} 
-                          />
-                          {record.status}
-                        </span>
-                      </td>
-                      <td>{record.remarks || '-'}</td>
-                    </tr>
-                  ))
-                ) : reportData && reportData.length > 0 ? (
-                  reportData.map((record, index) => (
-                    <tr key={index}>
-                      <td>{new Date(record.date).toLocaleDateString()}</td>
-                      <td>{record.studentName}</td>
-                      <td>{record.rollNumber}</td>
-                      <td>
-                        <span 
-                          className="status-badge"
-                          style={{ 
-                            background: getStatusBg(record.status),
-                            color: getStatusColor(record.status)
-                          }}
-                        >
-                          <span 
-                            className="status-dot" 
-                            style={{ background: getStatusColor(record.status) }} 
-                          />
-                          {record.status}
-                        </span>
-                      </td>
-                      <td>{record.remarks || '-'}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="empty-state">
-                      No attendance records found for the selected period.
+                        />
+                      </div>
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Chart Section - Placeholder for future chart integration */}
-      {summary && reportData && (
-        <div className="chart-section">
-          <h3>Attendance Distribution</h3>
-          <div className="chart-container">
-            <div className="chart-bars">
-              <div className="chart-bar-item">
-                <div 
-                  className="chart-bar present" 
-                  style={{ height: `${summary.presentRate}%` }}
-                />
-                <span className="chart-label">Present</span>
-                <span className="chart-value">{summary.presentRate}%</span>
-              </div>
-              <div className="chart-bar-item">
-                <div 
-                  className="chart-bar absent" 
-                  style={{ height: `${summary.absentRate}%` }}
-                />
-                <span className="chart-label">Absent</span>
-                <span className="chart-value">{summary.absentRate}%</span>
-              </div>
-              <div className="chart-bar-item">
-                <div 
-                  className="chart-bar late" 
-                  style={{ height: `${summary.lateRate}%` }}
-                />
-                <span className="chart-label">Late</span>
-                <span className="chart-value">{summary.lateRate}%</span>
-              </div>
-              <div className="chart-bar-item">
-                <div 
-                  className="chart-bar excused" 
-                  style={{ height: `${summary.excusedRate}%` }}
-                />
-                <span className="chart-label">Excused</span>
-                <span className="chart-value">{summary.excusedRate}%</span>
-              </div>
-            </div>
+      {/* Attendance Records Table */}
+      {viewMode !== 'teacher' && attendanceRecords.length > 0 && (
+        <div className="report-table-container">
+          <h3>
+            {viewMode === 'daily' ? 'Daily Attendance Report' : 
+             viewMode === 'weekly' ? 'Weekly Attendance Report' : 
+             'Monthly Attendance Report'}
+            <span className="report-date-range">
+              {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
+            </span>
+          </h3>
+          <div className="table-responsive">
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Student Name</th>
+                  <th>Roll Number</th>
+                  <th>Status</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceRecords.map((record, index) => (
+                  <tr key={index}>
+                    <td>{new Date(record.date || dateRange.startDate).toLocaleDateString()}</td>
+                    <td className="student-cell">
+                      <div className="student-avatar-small">
+                        {record.studentName?.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      {record.studentName}
+                    </td>
+                    <td className="text-center">{record.rollNumber}</td>
+                    <td>
+                      <span 
+                        className="status-badge"
+                        style={{ 
+                          background: getStatusBg(record.status),
+                          color: getStatusColor(record.status)
+                        }}
+                      >
+                        <span className="status-dot" style={{ background: getStatusColor(record.status) }} />
+                        {record.status}
+                      </span>
+                    </td>
+                    <td>{record.remarks || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
+      )}
+
+      {!reportData && !attendanceRecords.length && !loading && (
+        <div className="empty-state">
+          <div className="empty-icon">📊</div>
+          <h3>No Report Generated</h3>
+          <p>Select a report type and filters to generate a report</p>
         </div>
       )}
     </div>

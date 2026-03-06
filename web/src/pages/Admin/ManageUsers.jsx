@@ -260,7 +260,7 @@ const ManageUsers = () => {
         <div className="mu-modal-overlay" onClick={handleCloseModal}>
           <div className="mu-modal" onClick={e => e.stopPropagation()}>
             <div className="mu-modal-header">
-              <h3>{editingUser ? 'Edit User' : 'Add New User'}</h3>
+              <h2>{editingUser ? 'Edit User' : 'Register New User'}</h2>
               <button className="mu-modal-close" onClick={handleCloseModal}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>

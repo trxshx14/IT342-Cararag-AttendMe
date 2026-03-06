@@ -38,7 +38,9 @@ const ManageClasses = () => {
     subject: '',
     section: '',
     academicYear: '',
-    teacherId: ''
+    teacherId: '',
+    scheduleDay: '',
+    scheduleTime: '',
   });
 
   const currentYear = new Date().getFullYear();
@@ -46,7 +48,6 @@ const ManageClasses = () => {
   const defaultAcademicYear = `${currentYear}-${nextYear}`;
 
   useEffect(() => { fetchData(); }, []);
-
   useEffect(() => { filterClasses(); }, [classes, searchTerm, filterTeacher, filterYear]);
 
   const fetchData = async () => {
@@ -83,19 +84,46 @@ const ManageClasses = () => {
   const academicYears = [...new Set(classes.map(cls => cls.academicYear).filter(Boolean))];
   const totalStudents = classes.reduce((acc, cls) => acc + (cls.studentCount || 0), 0);
 
+  const formatTime = (time) => {
+    if (!time) return '';
+    try {
+      return new Date('1970-01-01T' + time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch { return time; }
+  };
+
   const handleOpenModal = (classItem = null) => {
     if (classItem) {
       setEditingClass(classItem);
-      setFormData({ className: classItem.className, subject: classItem.subject, section: classItem.section || '', academicYear: classItem.academicYear || defaultAcademicYear, teacherId: classItem.teacherId || '' });
+      setFormData({
+        className: classItem.className,
+        subject: classItem.subject,
+        section: classItem.section || '',
+        academicYear: classItem.academicYear || defaultAcademicYear,
+        teacherId: classItem.teacherId || '',
+        scheduleDay: classItem.scheduleDay || '',
+        scheduleTime: classItem.scheduleTime || '',
+      });
     } else {
       setEditingClass(null);
-      setFormData({ className: '', subject: '', section: '', academicYear: defaultAcademicYear, teacherId: '' });
+      setFormData({
+        className: '', subject: '', section: '',
+        academicYear: defaultAcademicYear, teacherId: '',
+        scheduleDay: '', scheduleTime: '',
+      });
     }
     setShowModal(true);
     setError('');
   };
 
-  const handleCloseModal = () => { setShowModal(false); setEditingClass(null); setFormData({ className: '', subject: '', section: '', academicYear: defaultAcademicYear, teacherId: '' }); };
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingClass(null);
+    setFormData({
+      className: '', subject: '', section: '',
+      academicYear: defaultAcademicYear, teacherId: '',
+      scheduleDay: '', scheduleTime: '',
+    });
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -107,9 +135,23 @@ const ManageClasses = () => {
     setLoading(true);
     setError('');
     try {
-      if (!formData.className || !formData.subject || !formData.teacherId) throw new Error('Please fill in all required fields');
-      const classData = { className: formData.className, subject: formData.subject, section: formData.section, academicYear: formData.academicYear, teacherId: parseInt(formData.teacherId) };
-      const response = editingClass ? await classService.updateClass(editingClass.classId, classData) : await classService.createClass(classData);
+      if (!formData.className || !formData.subject || !formData.teacherId)
+        throw new Error('Please fill in all required fields');
+
+      const classData = {
+        className: formData.className,
+        subject: formData.subject,
+        section: formData.section,
+        academicYear: formData.academicYear,
+        teacherId: parseInt(formData.teacherId),
+        scheduleDay: formData.scheduleDay,
+        scheduleTime: formData.scheduleTime,
+      };
+
+      const response = editingClass
+        ? await classService.updateClass(editingClass.classId, classData)
+        : await classService.createClass(classData);
+
       if (response.success) { handleCloseModal(); fetchData(); }
       else setError(response.message || 'Failed to save class');
     } catch (err) {
@@ -139,7 +181,11 @@ const ManageClasses = () => {
     } catch { setError('Error loading students'); } finally { setLoading(false); }
   };
 
-  const handleOpenAddStudent = () => { setStudentForm({ firstName: '', lastName: '', rollNumber: '', email: '', phone: '' }); setStudentError(''); setShowAddStudentModal(true); };
+  const handleOpenAddStudent = () => {
+    setStudentForm({ firstName: '', lastName: '', rollNumber: '', email: '', phone: '' });
+    setStudentError('');
+    setShowAddStudentModal(true);
+  };
   const handleCloseAddStudent = () => { setShowAddStudentModal(false); setStudentError(''); };
 
   const handleStudentInputChange = (e) => {
@@ -152,8 +198,13 @@ const ManageClasses = () => {
     setStudentError('');
     setStudentLoading(true);
     try {
-      if (!studentForm.firstName || !studentForm.lastName || !studentForm.rollNumber) throw new Error('First name, last name, and roll number are required.');
-      const payload = { firstName: studentForm.firstName, lastName: studentForm.lastName, rollNumber: studentForm.rollNumber, email: studentForm.email || null, phone: studentForm.phone || null, classId: selectedClass.classId };
+      if (!studentForm.firstName || !studentForm.lastName || !studentForm.rollNumber)
+        throw new Error('First name, last name, and roll number are required.');
+      const payload = {
+        firstName: studentForm.firstName, lastName: studentForm.lastName,
+        rollNumber: studentForm.rollNumber, email: studentForm.email || null,
+        phone: studentForm.phone || null, classId: selectedClass.classId
+      };
       const response = await studentService.createStudent(payload);
       if (response.success) {
         const updated = await classService.getStudentsInClass(selectedClass.classId);
@@ -220,7 +271,7 @@ const ManageClasses = () => {
         </div>
       </div>
 
-      {/* Compact Search & Filter Toolbar */}
+      {/* Search & Filter Toolbar */}
       <div className="search-filter-bar">
         <div className="search-box">
           <span className="search-icon">🔍</span>
@@ -272,6 +323,18 @@ const ManageClasses = () => {
                   <span className="detail-value">{cls.subject}</span>
                 </div>
                 <div className="detail-row">
+                  <span className="detail-label">Schedule:</span>
+                  <span className="detail-value schedule-value">
+                    {cls.scheduleDay || cls.scheduleTime
+                      ? <>
+                          {cls.scheduleDay && <span className="schedule-day">{cls.scheduleDay}</span>}
+                          {cls.scheduleTime && <span className="schedule-time">🕐 {formatTime(cls.scheduleTime)}</span>}
+                        </>
+                      : <span style={{ color: 'var(--muted)', fontStyle: 'italic', background: 'none' }}>Not set</span>
+                    }
+                  </span>
+                </div>
+                <div className="detail-row">
                   <span className="detail-label">Academic Year:</span>
                   <span className="detail-value">{cls.academicYear || 'N/A'}</span>
                 </div>
@@ -299,7 +362,7 @@ const ManageClasses = () => {
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editingClass ? 'Edit Class' : 'Create New Class'}</h3>
+              <h1>{editingClass ? 'Edit Class' : 'Create New Class'}</h1>
               <button className="modal-close" onClick={handleCloseModal}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -312,6 +375,33 @@ const ManageClasses = () => {
                   <label className="form-label">Subject *</label>
                   <input type="text" name="subject" className="form-input" value={formData.subject} onChange={handleInputChange} required placeholder="e.g., Mathematics" />
                 </div>
+
+                {/* Schedule - Day and Time side by side */}
+                <div className="form-row-2col">
+                  <div className="form-group">
+                    <label className="form-label">Day</label>
+                    <select name="scheduleDay" className="form-input" value={formData.scheduleDay} onChange={handleInputChange}>
+                      <option value="">Select day</option>
+                      <option>Monday</option>
+                      <option>Tuesday</option>
+                      <option>Wednesday</option>
+                      <option>Thursday</option>
+                      <option>Friday</option>
+                      <option>Saturday</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Time</label>
+                    <input
+                      type="time"
+                      name="scheduleTime"
+                      className="form-input"
+                      value={formData.scheduleTime}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">Section</label>
                   <input type="text" name="section" className="form-input" value={formData.section} onChange={handleInputChange} placeholder="e.g., A, B, C (optional)" />
@@ -320,8 +410,8 @@ const ManageClasses = () => {
                   <label className="form-label">Academic Year</label>
                   <select name="academicYear" className="form-input" value={formData.academicYear} onChange={handleInputChange}>
                     <option value={`${currentYear}-${nextYear}`}>{currentYear}-{nextYear}</option>
-                    <option value={`${currentYear-1}-${currentYear}`}>{currentYear-1}-{currentYear}</option>
-                    <option value={`${currentYear+1}-${currentYear+2}`}>{currentYear+1}-{currentYear+2}</option>
+                    <option value={`${currentYear - 1}-${currentYear}`}>{currentYear - 1}-{currentYear}</option>
+                    <option value={`${currentYear + 1}-${currentYear + 2}`}>{currentYear + 1}-{currentYear + 2}</option>
                   </select>
                 </div>
                 <div className="form-group">

@@ -2,19 +2,22 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
+import logo from '../../assets/dashboardlogo.png';
 
 const Sidebar = ({ currentPage, onPageChange }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const teacherNav = [
-    
+    { id: 'dashboard', icon: '🏠', label: 'Dashboard', path: '/teacher/dashboard' },
+    { id: 'take-attendance', icon: '✏️', label: 'Take Attendance', path: '/teacher/take-attendance' },
+    { id: 'history', icon: '📋', label: 'Attendance History', path: '/teacher/history' },
+    { id: 'reports', icon: '📊', label: 'Reports', path: '/teacher/reports' },
   ];
 
   const adminNav = [
-    ...teacherNav,
     { id: 'dashboard', icon: '🏠', label: 'Dashboard', path: '/admin/dashboard' },
-    { id: 'manage-classes', icon: '✏️', label: 'Manage Classes', path: '/admin/classes' },
+    { id: 'manage-classes', icon: '📚', label: 'Manage Classes', path: '/admin/classes' },
     { id: 'manage-users', icon: '👥', label: 'Manage Teachers', path: '/admin/users' },
     { id: 'reports', icon: '📊', label: 'Reports', path: '/admin/reports' },
   ];
@@ -36,7 +39,7 @@ const Sidebar = ({ currentPage, onPageChange }) => {
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">A</div>
+        <img src={logo} alt="AttendMe" className="sidebar-logo-image" />
         <div className="sidebar-logo-text">AttendMe</div>
       </div>
 
