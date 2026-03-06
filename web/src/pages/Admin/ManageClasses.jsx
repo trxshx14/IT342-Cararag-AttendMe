@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { classService } from '../../services/classService';
 import { userService } from '../../services/userService';
 import { studentService } from '../../services/studentService';
+import {
+  School, GraduationCap, Users, Search, Clock,
+  Pencil, Trash2, X, Plus, UserCircle2
+} from 'lucide-react';
 import './ManageClasses.css';
 
 const ManageClasses = () => {
@@ -41,6 +45,7 @@ const ManageClasses = () => {
     teacherId: '',
     scheduleDay: '',
     scheduleTime: '',
+    scheduleTimeEnd: '',
   });
 
   const currentYear = new Date().getFullYear();
@@ -102,13 +107,14 @@ const ManageClasses = () => {
         teacherId: classItem.teacherId || '',
         scheduleDay: classItem.scheduleDay || '',
         scheduleTime: classItem.scheduleTime || '',
+        scheduleTimeEnd: classItem.scheduleTimeEnd || '',
       });
     } else {
       setEditingClass(null);
       setFormData({
         className: '', subject: '', section: '',
         academicYear: defaultAcademicYear, teacherId: '',
-        scheduleDay: '', scheduleTime: '',
+        scheduleDay: '', scheduleTime: '', scheduleTimeEnd: '',
       });
     }
     setShowModal(true);
@@ -121,7 +127,7 @@ const ManageClasses = () => {
     setFormData({
       className: '', subject: '', section: '',
       academicYear: defaultAcademicYear, teacherId: '',
-      scheduleDay: '', scheduleTime: '',
+      scheduleDay: '', scheduleTime: '', scheduleTimeEnd: '',
     });
   };
 
@@ -146,6 +152,7 @@ const ManageClasses = () => {
         teacherId: parseInt(formData.teacherId),
         scheduleDay: formData.scheduleDay,
         scheduleTime: formData.scheduleTime,
+        scheduleTimeEnd: formData.scheduleTimeEnd,
       };
 
       const response = editingClass
@@ -240,7 +247,7 @@ const ManageClasses = () => {
           <p className="page-description">Create and organize classes, assign teachers, and manage student enrollment</p>
         </div>
         <button className="btn-primary" onClick={() => handleOpenModal()}>
-          <span className="btn-icon-small">+</span> New Class
+          <Plus size={16} /> New Class
         </button>
       </div>
 
@@ -249,21 +256,27 @@ const ManageClasses = () => {
       {/* Stats */}
       <div className="stats-summary">
         <div className="stat-summary-item">
-          <div className="stat-icon-wrap blue">🏫</div>
+          <div className="stat-icon-wrap blue">
+            <School size={22} color="#0F2D5E" strokeWidth={2} />
+          </div>
           <div>
             <span className="stat-summary-value">{classes.length}</span>
             <span className="stat-summary-label">Total Classes</span>
           </div>
         </div>
         <div className="stat-summary-item">
-          <div className="stat-icon-wrap green">👨‍🏫</div>
+          <div className="stat-icon-wrap green">
+            <UserCircle2 size={22} color="#0F2D5E" strokeWidth={2} />
+          </div>
           <div>
             <span className="stat-summary-value">{teachers.length}</span>
             <span className="stat-summary-label">Active Teachers</span>
           </div>
         </div>
         <div className="stat-summary-item">
-          <div className="stat-icon-wrap purple">🎓</div>
+          <div className="stat-icon-wrap purple">
+            <GraduationCap size={22} color="#0F2D5E" strokeWidth={2} />
+          </div>
           <div>
             <span className="stat-summary-value">{totalStudents}</span>
             <span className="stat-summary-label">Total Students</span>
@@ -274,7 +287,7 @@ const ManageClasses = () => {
       {/* Search & Filter Toolbar */}
       <div className="search-filter-bar">
         <div className="search-box">
-          <span className="search-icon">🔍</span>
+          <span className="search-icon"><Search size={16} color="#64748B" /></span>
           <input
             type="text"
             placeholder="Search classes by name, subject, or section..."
@@ -282,7 +295,7 @@ const ManageClasses = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
-          {searchTerm && <button className="clear-search" onClick={() => setSearchTerm('')}>✕</button>}
+          {searchTerm && <button className="clear-search" onClick={() => setSearchTerm('')}><X size={12} /></button>}
         </div>
         <div className="toolbar-divider" />
         <select className="filter-select" value={filterTeacher} onChange={(e) => setFilterTeacher(e.target.value)}>
@@ -328,7 +341,13 @@ const ManageClasses = () => {
                     {cls.scheduleDay || cls.scheduleTime
                       ? <>
                           {cls.scheduleDay && <span className="schedule-day">{cls.scheduleDay}</span>}
-                          {cls.scheduleTime && <span className="schedule-time">🕐 {formatTime(cls.scheduleTime)}</span>}
+                          {cls.scheduleTime && (
+                            <span className="schedule-time">
+                              <Clock size={12} />
+                              {formatTime(cls.scheduleTime)}
+                              {cls.scheduleTimeEnd && <> – {formatTime(cls.scheduleTimeEnd)}</>}
+                            </span>
+                          )}
                         </>
                       : <span style={{ color: 'var(--muted)', fontStyle: 'italic', background: 'none' }}>Not set</span>
                     }
@@ -340,7 +359,7 @@ const ManageClasses = () => {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Teacher:</span>
-                  <span className="detail-value teacher-name">👤 {getTeacherName(cls.teacherId)}</span>
+                  <span className="detail-value teacher-name"><UserCircle2 size={14} /> {getTeacherName(cls.teacherId)}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Students:</span>
@@ -348,9 +367,9 @@ const ManageClasses = () => {
                 </div>
               </div>
               <div className="class-actions">
-                <button className="btn-icon" onClick={() => handleViewStudents(cls)} title="View Students">👥</button>
-                <button className="btn-icon" onClick={() => handleOpenModal(cls)} title="Edit Class">✏️</button>
-                <button className="btn-icon delete" onClick={() => handleDeleteClass(cls.classId, cls.className)} title="Delete Class">🗑️</button>
+                <button className="btn-icon" onClick={() => handleViewStudents(cls)} title="View Students"><Users size={16} color="#0F2D5E" /></button>
+                <button className="btn-icon" onClick={() => handleOpenModal(cls)} title="Edit Class"><Pencil size={16} color="#0F2D5E" /></button>
+                <button className="btn-icon delete" onClick={() => handleDeleteClass(cls.classId, cls.className)} title="Delete Class"><Trash2 size={16} color="#ef4444" /></button>
               </div>
             </div>
           ))
@@ -363,7 +382,7 @@ const ManageClasses = () => {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h1>{editingClass ? 'Edit Class' : 'Create New Class'}</h1>
-              <button className="modal-close" onClick={handleCloseModal}>✕</button>
+              <button className="modal-close" onClick={handleCloseModal}><X size={16} /></button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
@@ -376,8 +395,8 @@ const ManageClasses = () => {
                   <input type="text" name="subject" className="form-input" value={formData.subject} onChange={handleInputChange} required placeholder="e.g., Mathematics" />
                 </div>
 
-                {/* Schedule - Day and Time side by side */}
-                <div className="form-row-2col">
+                {/* Schedule - Day, Start Time, End Time */}
+                <div className="form-row-3col">
                   <div className="form-group">
                     <label className="form-label">Day</label>
                     <select name="scheduleDay" className="form-input" value={formData.scheduleDay} onChange={handleInputChange}>
@@ -391,12 +410,22 @@ const ManageClasses = () => {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Time</label>
+                    <label className="form-label">Start Time</label>
                     <input
                       type="time"
                       name="scheduleTime"
                       className="form-input"
                       value={formData.scheduleTime}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">End Time</label>
+                    <input
+                      type="time"
+                      name="scheduleTimeEnd"
+                      className="form-input"
+                      value={formData.scheduleTimeEnd}
                       onChange={handleInputChange}
                     />
                   </div>
@@ -437,7 +466,7 @@ const ManageClasses = () => {
           <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Students in {selectedClass.className}</h3>
-              <button className="modal-close" onClick={() => setShowStudentsModal(false)}>✕</button>
+              <button className="modal-close" onClick={() => setShowStudentsModal(false)}><X size={16} /></button>
             </div>
             <div className="modal-body">
               {classStudents.length === 0 ? (
@@ -453,7 +482,7 @@ const ManageClasses = () => {
                         <td>{student.rollNumber}</td>
                         <td>{student.fullName}</td>
                         <td>{student.email || '—'}</td>
-                        <td><button className="btn-icon delete" title="Remove from class" onClick={() => handleRemoveStudent(student.studentId)}>➖</button></td>
+                        <td><button className="btn-icon delete" title="Remove from class" onClick={() => handleRemoveStudent(student.studentId)}><Trash2 size={14} color="#ef4444" /></button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -461,7 +490,7 @@ const ManageClasses = () => {
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn-primary" onClick={handleOpenAddStudent}>+ Add Student</button>
+              <button className="btn-primary" onClick={handleOpenAddStudent}><Plus size={16} /> Add Student</button>
               <button className="btn-outline" onClick={() => setShowStudentsModal(false)}>Close</button>
             </div>
           </div>
@@ -474,7 +503,7 @@ const ManageClasses = () => {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Add Student to {selectedClass?.className}</h3>
-              <button className="modal-close" onClick={handleCloseAddStudent}>✕</button>
+              <button className="modal-close" onClick={handleCloseAddStudent}><X size={16} /></button>
             </div>
             <form onSubmit={handleAddStudentSubmit}>
               <div className="modal-body">

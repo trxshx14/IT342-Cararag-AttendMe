@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  GraduationCap, UserCircle2, BookOpen, BarChart2,
+  Users, ShieldCheck, CalendarDays, Trophy,
+  School, CheckCircle2, ChevronRight
+} from 'lucide-react';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -125,12 +130,12 @@ const AdminDashboard = () => {
         <div className="ad-welcome-orb ad-orb3" />
         <div className="ad-welcome-left">
           <p className="ad-greeting-label">{getGreeting()}</p>
-          <h1 className="ad-greeting-name">{userName} 👋</h1>
+          <h1 className="ad-greeting-name">{userName}</h1>
           <p className="ad-greeting-sub">Here's what's happening with your school today.</p>
         </div>
         <div className="ad-welcome-right">
           <div className="ad-date-pill">
-            <span className="ad-date-icon">📅</span>
+            <CalendarDays size={16} />
             <span>{currentTime}</span>
           </div>
           <div className="ad-mini-stats">
@@ -154,8 +159,10 @@ const AdminDashboard = () => {
 
       {/* ── Stats Grid ─────────────────────────────────── */}
       <div className="ad-stats-grid">
-        <div className="ad-stat-card" style={{ '--card-accent': '#3b82f6', '--card-glow': 'rgba(59,130,246,0.18)' }}>
-          <div className="ad-stat-icon-wrap" style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}>👥</div>
+        <div className="ad-stat-card">
+          <div className="ad-stat-icon-wrap">
+            <GraduationCap size={28} color="#FFFFFF" strokeWidth={2} />
+          </div>
           <div className="ad-stat-body">
             <span className="ad-stat-label">Total Students</span>
             <span className="ad-stat-value">{stats.totalStudents}</span>
@@ -163,8 +170,10 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="ad-stat-card" style={{ '--card-accent': '#ec4899', '--card-glow': 'rgba(236,72,153,0.15)' }}>
-          <div className="ad-stat-icon-wrap" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)' }}>👨‍🏫</div>
+        <div className="ad-stat-card">
+          <div className="ad-stat-icon-wrap">
+            <UserCircle2 size={28} color="#FFFFFF" strokeWidth={2} />
+          </div>
           <div className="ad-stat-body">
             <span className="ad-stat-label">Total Teachers</span>
             <span className="ad-stat-value">{stats.totalTeachers}</span>
@@ -172,8 +181,10 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="ad-stat-card" style={{ '--card-accent': '#06b6d4', '--card-glow': 'rgba(6,182,212,0.15)' }}>
-          <div className="ad-stat-icon-wrap" style={{ background: 'linear-gradient(135deg, #4facfe, #00f2fe)' }}>📚</div>
+        <div className="ad-stat-card">
+          <div className="ad-stat-icon-wrap">
+            <BookOpen size={28} color="#FFFFFF" strokeWidth={2} />
+          </div>
           <div className="ad-stat-body">
             <span className="ad-stat-label">Total Classes</span>
             <span className="ad-stat-value">{stats.totalClasses}</span>
@@ -181,8 +192,10 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="ad-stat-card" style={{ '--card-accent': '#10b981', '--card-glow': 'rgba(16,185,129,0.15)' }}>
-          <div className="ad-stat-icon-wrap" style={{ background: 'linear-gradient(135deg, #43e97b, #38f9d7)' }}>📊</div>
+        <div className="ad-stat-card">
+          <div className="ad-stat-icon-wrap">
+            <BarChart2 size={28} color="#FFFFFF" strokeWidth={2} />
+          </div>
           <div className="ad-stat-body">
             <span className="ad-stat-label">Avg Class Size</span>
             <span className="ad-stat-value">{stats.avgClassSize}</span>
@@ -206,10 +219,10 @@ const AdminDashboard = () => {
 
           <div className="ad-dist-list">
             {[
-              { label: 'Small Classes', key: 'small', desc: '< 15 students', color: '#3b82f6', gradient: 'linear-gradient(90deg, #667eea, #3b82f6)' },
-              { label: 'Medium Classes', key: 'medium', desc: '15–30 students', color: '#06b6d4', gradient: 'linear-gradient(90deg, #4facfe, #06b6d4)' },
-              { label: 'Large Classes', key: 'large', desc: '30+ students', color: '#10b981', gradient: 'linear-gradient(90deg, #43e97b, #10b981)' },
-            ].map(({ label, key, desc, gradient }) => (
+              { label: 'Small Classes', key: 'small', desc: '< 15 students' },
+              { label: 'Medium Classes', key: 'medium', desc: '15–30 students' },
+              { label: 'Large Classes', key: 'large', desc: '30+ students' },
+            ].map(({ label, key, desc }) => (
               <div key={key} className="ad-dist-item">
                 <div className="ad-dist-top">
                   <span className="ad-dist-label">{label}</span>
@@ -221,7 +234,7 @@ const AdminDashboard = () => {
                 <div className="ad-progress-track">
                   <div
                     className="ad-progress-fill"
-                    style={{ width: `${(classDistribution[key] / totalDist) * 100}%`, background: gradient }}
+                    style={{ width: `${(classDistribution[key] / totalDist) * 100}%` }}
                   />
                 </div>
               </div>
@@ -233,10 +246,14 @@ const AdminDashboard = () => {
         <div className="ad-card">
           <div className="ad-card-header">
             <div>
-              <h3 className="ad-card-title">🏆 Top Teachers</h3>
+              <h3 className="ad-card-title ad-title-with-icon">
+                <Trophy size={16} color="#0F2D5E" /> Top Teachers
+              </h3>
               <p className="ad-card-sub">Ranked by class assignments</p>
             </div>
-            <button className="ad-view-all" onClick={() => navigate('/admin/users')}>View All →</button>
+            <button className="ad-view-all" onClick={() => navigate('/admin/users')}>
+              View All <ChevronRight size={14} />
+            </button>
           </div>
 
           <div className="ad-teachers-list">
@@ -261,53 +278,29 @@ const AdminDashboard = () => {
       <div className="ad-card ad-summary-card">
         <div className="ad-card-header">
           <div>
-            <h3 className="ad-card-title">📋 School Summary</h3>
+            <h3 className="ad-card-title ad-title-with-icon">
+              <ShieldCheck size={16} color="#0F2D5E" /> School Summary
+            </h3>
             <p className="ad-card-sub">Key metrics at a glance</p>
           </div>
         </div>
         <div className="ad-summary-grid">
-          <div className="ad-summary-item">
-            <span className="ad-summary-icon" style={{ background: '#eff6ff' }}>🏫</span>
-            <div>
-              <span className="ad-summary-val">{stats.totalClasses}</span>
-              <span className="ad-summary-lbl">Total Classes</span>
+          {[
+            { icon: <School size={22} color="#0F2D5E" />, val: stats.totalClasses, lbl: 'Total Classes' },
+            { icon: <CheckCircle2 size={22} color="#0F2D5E" />, val: stats.activeClasses, lbl: 'Active Classes' },
+            { icon: <UserCircle2 size={22} color="#0F2D5E" />, val: stats.teachersWithClasses, lbl: 'Teachers w/ Classes' },
+            { icon: <BarChart2 size={22} color="#0F2D5E" />, val: stats.avgClassSize, lbl: 'Avg Class Size' },
+            { icon: <GraduationCap size={22} color="#0F2D5E" />, val: stats.totalStudents, lbl: 'Total Students' },
+            { icon: <Users size={22} color="#0F2D5E" />, val: stats.totalTeachers, lbl: 'Total Teachers' },
+          ].map(({ icon, val, lbl }) => (
+            <div key={lbl} className="ad-summary-item">
+              <span className="ad-summary-icon">{icon}</span>
+              <div>
+                <span className="ad-summary-val">{val}</span>
+                <span className="ad-summary-lbl">{lbl}</span>
+              </div>
             </div>
-          </div>
-          <div className="ad-summary-item">
-            <span className="ad-summary-icon" style={{ background: '#f0fdf4' }}>✅</span>
-            <div>
-              <span className="ad-summary-val">{stats.activeClasses}</span>
-              <span className="ad-summary-lbl">Active Classes</span>
-            </div>
-          </div>
-          <div className="ad-summary-item">
-            <span className="ad-summary-icon" style={{ background: '#faf5ff' }}>👨‍🏫</span>
-            <div>
-              <span className="ad-summary-val">{stats.teachersWithClasses}</span>
-              <span className="ad-summary-lbl">Teachers w/ Classes</span>
-            </div>
-          </div>
-          <div className="ad-summary-item">
-            <span className="ad-summary-icon" style={{ background: '#fff7ed' }}>📊</span>
-            <div>
-              <span className="ad-summary-val">{stats.avgClassSize}</span>
-              <span className="ad-summary-lbl">Avg Class Size</span>
-            </div>
-          </div>
-          <div className="ad-summary-item">
-            <span className="ad-summary-icon" style={{ background: '#fef2f2' }}>🎓</span>
-            <div>
-              <span className="ad-summary-val">{stats.totalStudents}</span>
-              <span className="ad-summary-lbl">Total Students</span>
-            </div>
-          </div>
-          <div className="ad-summary-item">
-            <span className="ad-summary-icon" style={{ background: '#f0f9ff' }}>👥</span>
-            <div>
-              <span className="ad-summary-val">{stats.totalTeachers}</span>
-              <span className="ad-summary-lbl">Total Teachers</span>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -316,17 +309,17 @@ const AdminDashboard = () => {
         <h3 className="ad-quick-title">Quick Actions</h3>
         <div className="ad-quick-grid">
           {[
-            { icon: '👥', label: 'Manage Users', desc: 'Add or edit accounts', path: '/admin/users', grad: 'linear-gradient(135deg, #667eea, #764ba2)' },
-            { icon: '📚', label: 'Manage Classes', desc: 'Create or modify classes', path: '/admin/classes', grad: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
-            { icon: '📊', label: 'View Reports', desc: 'Analytics and insights', path: '/admin/reports', grad: 'linear-gradient(135deg, #43e97b, #38f9d7)' },
-          ].map(({ icon, label, desc, path, grad }) => (
+            { icon: <Users size={26} color="#FFFFFF" />, label: 'Manage Users', desc: 'Add or edit accounts', path: '/admin/users' },
+            { icon: <BookOpen size={26} color="#FFFFFF" />, label: 'Manage Classes', desc: 'Create or modify classes', path: '/admin/classes' },
+            { icon: <BarChart2 size={26} color="#FFFFFF" />, label: 'View Reports', desc: 'Analytics and insights', path: '/admin/reports' },
+          ].map(({ icon, label, desc, path }) => (
             <button key={path} className="ad-quick-card" onClick={() => navigate(path)}>
-              <div className="ad-quick-icon" style={{ background: grad }}>{icon}</div>
+              <div className="ad-quick-icon">{icon}</div>
               <div className="ad-quick-info">
                 <span className="ad-quick-label">{label}</span>
                 <span className="ad-quick-desc">{desc}</span>
               </div>
-              <span className="ad-quick-arrow">→</span>
+              <ChevronRight size={18} className="ad-quick-arrow" />
             </button>
           ))}
         </div>

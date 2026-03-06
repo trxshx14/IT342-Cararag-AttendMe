@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { userService } from '../../services/userService';
+import {
+  Users, ShieldCheck, UserCircle2, CheckCircle2,
+  Search, Pencil, Trash2, X, Plus, Key,
+  ToggleLeft, ToggleRight, Eye, EyeOff
+} from 'lucide-react';
 import './ManageUsers.css';
 
 const ManageUsers = () => {
@@ -124,7 +129,7 @@ const ManageUsers = () => {
           <p className="mu-page-description">Add and manage teacher and administrator accounts</p>
         </div>
         <button className="mu-btn-primary" onClick={() => handleOpenModal()}>
-          <span>+</span> New Teacher/Admin
+          <Plus size={16} /> New Teacher/Admin
         </button>
       </div>
 
@@ -133,28 +138,36 @@ const ManageUsers = () => {
       {/* Stats */}
       <div className="mu-stats-row">
         <div className="mu-stat-card">
-          <div className="mu-stat-icon blue">👥</div>
+          <div className="mu-stat-icon blue">
+            <Users size={22} color="#0F2D5E" strokeWidth={2} />
+          </div>
           <div>
             <div className="mu-stat-value">{users.length}</div>
             <div className="mu-stat-label">Total Users</div>
           </div>
         </div>
         <div className="mu-stat-card">
-          <div className="mu-stat-icon purple">🛡️</div>
+          <div className="mu-stat-icon purple">
+            <ShieldCheck size={22} color="#0F2D5E" strokeWidth={2} />
+          </div>
           <div>
             <div className="mu-stat-value">{totalAdmins}</div>
             <div className="mu-stat-label">Admins</div>
           </div>
         </div>
         <div className="mu-stat-card">
-          <div className="mu-stat-icon blue">👨‍🏫</div>
+          <div className="mu-stat-icon blue">
+            <UserCircle2 size={22} color="#0F2D5E" strokeWidth={2} />
+          </div>
           <div>
             <div className="mu-stat-value">{totalTeachers}</div>
             <div className="mu-stat-label">Teachers</div>
           </div>
         </div>
         <div className="mu-stat-card">
-          <div className="mu-stat-icon green">✅</div>
+          <div className="mu-stat-icon green">
+            <CheckCircle2 size={22} color="#0F2D5E" strokeWidth={2} />
+          </div>
           <div>
             <div className="mu-stat-value">{totalActive}</div>
             <div className="mu-stat-label">Active</div>
@@ -165,7 +178,7 @@ const ManageUsers = () => {
       {/* Compact Toolbar */}
       <div className="mu-toolbar">
         <div className="mu-search-wrap">
-          <span className="mu-search-icon">🔍</span>
+          <span className="mu-search-icon"><Search size={16} color="#64748B" /></span>
           <input
             type="text"
             className="mu-search-input"
@@ -173,7 +186,11 @@ const ManageUsers = () => {
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
-          {searchTerm && <button className="mu-clear-btn" onClick={() => setSearchTerm('')}>✕</button>}
+          {searchTerm && (
+            <button className="mu-clear-btn" onClick={() => setSearchTerm('')}>
+              <X size={12} />
+            </button>
+          )}
         </div>
         <div className="mu-toolbar-divider" />
         <select className="mu-filter-select" value={filterRole} onChange={e => setFilterRole(e.target.value)}>
@@ -219,12 +236,16 @@ const ManageUsers = () => {
                 <td className="mu-email">{user.email}</td>
                 <td>
                   <span className={`mu-role-badge mu-role-${user.role?.toLowerCase()}`}>
-                    {user.role === 'ADMIN' ? '🛡️ Admin' : '👨‍🏫 Teacher'}
+                    {user.role === 'ADMIN'
+                      ? <><ShieldCheck size={12} /> Admin</>
+                      : <><UserCircle2 size={12} /> Teacher</>
+                    }
                   </span>
                 </td>
                 <td>
                   <span className={`mu-status-badge ${user.active ? 'mu-active' : 'mu-inactive'}`}>
-                    {user.active ? '● Active' : '● Inactive'}
+                    <span className="mu-status-dot" />
+                    {user.active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td className="mu-last-login">
@@ -232,12 +253,21 @@ const ManageUsers = () => {
                 </td>
                 <td>
                   <div className="mu-actions">
-                    <button className="mu-btn-icon" onClick={() => handleOpenModal(user)} title="Edit">✏️</button>
-                    <button className="mu-btn-icon" onClick={() => handleToggleActive(user.userId, user.active)} title={user.active ? 'Deactivate' : 'Activate'}>
-                      {user.active ? '🔴' : '🟢'}
+                    <button className="mu-btn-icon" onClick={() => handleOpenModal(user)} title="Edit">
+                      <Pencil size={15} color="#0F2D5E" />
                     </button>
-                    <button className="mu-btn-icon" onClick={() => handleResetPassword(user.userId)} title="Reset Password">🔑</button>
-                    <button className="mu-btn-icon mu-delete" onClick={() => handleDeleteUser(user.userId, user.fullName)} title="Delete">🗑️</button>
+                    <button className="mu-btn-icon" onClick={() => handleToggleActive(user.userId, user.active)} title={user.active ? 'Deactivate' : 'Activate'}>
+                      {user.active
+                        ? <ToggleRight size={15} color="#16a34a" />
+                        : <ToggleLeft size={15} color="#dc2626" />
+                      }
+                    </button>
+                    <button className="mu-btn-icon" onClick={() => handleResetPassword(user.userId)} title="Reset Password">
+                      <Key size={15} color="#0F2D5E" />
+                    </button>
+                    <button className="mu-btn-icon mu-delete" onClick={() => handleDeleteUser(user.userId, user.fullName)} title="Delete">
+                      <Trash2 size={15} color="#ef4444" />
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -260,8 +290,8 @@ const ManageUsers = () => {
         <div className="mu-modal-overlay" onClick={handleCloseModal}>
           <div className="mu-modal" onClick={e => e.stopPropagation()}>
             <div className="mu-modal-header">
-              <h2>{editingUser ? 'Edit User' : 'Register New User'}</h2>
-              <button className="mu-modal-close" onClick={handleCloseModal}>✕</button>
+              <h3>{editingUser ? 'Edit User' : 'Register New User'}</h3>
+              <button className="mu-modal-close" onClick={handleCloseModal}><X size={16} /></button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="mu-modal-body">
@@ -287,7 +317,7 @@ const ManageUsers = () => {
                     <div className="mu-password-row">
                       <input type={showPassword ? 'text' : 'password'} name="password" className="mu-form-input" value={formData.password} onChange={handleInputChange} placeholder="Leave empty for auto-generated" />
                       <button type="button" className="mu-btn-icon" onClick={() => setShowPassword(!showPassword)} title={showPassword ? 'Hide' : 'Show'}>
-                        {showPassword ? '👁️' : '👁️‍🗨️'}
+                        {showPassword ? <EyeOff size={15} color="#0F2D5E" /> : <Eye size={15} color="#0F2D5E" />}
                       </button>
                     </div>
                     <small className="mu-form-hint">If left empty, a random password will be generated</small>

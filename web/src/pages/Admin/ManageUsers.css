@@ -30,6 +30,7 @@
   display: inline-block;
 }
 
+
 .mu-page-header h2::after {
   content: '';
   position: absolute;
@@ -327,6 +328,14 @@
   background: #fee2e2;
   color: #dc2626;
   border: 1px solid rgba(220,38,38,0.18);
+}
+
+.mu-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
 }
 
 /* ── Action Buttons ───────────────────────────────────── */
