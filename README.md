@@ -1,79 +1,93 @@
-📚 AttendMe
-Smart Attendance Management System for Schools
+# 📚 AttendMe
+## Smart Attendance Management System for Schools
 
-AttendMe is a modern role-based attendance management system designed to help schools efficiently track, manage, and monitor student attendance.
+AttendMe is a **role-based attendance management system** designed to help schools efficiently track, manage, and monitor student attendance. The system replaces traditional paper-based attendance tracking with a **secure, real-time digital platform** that allows teachers and administrators to manage attendance records more efficiently.
 
-The system eliminates traditional paper-based attendance tracking and replaces it with a secure, real-time digital solution for teachers and administrators.
+Built using a **modern full-stack architecture**, AttendMe integrates **web and mobile platforms** to provide a reliable, scalable, and user-friendly experience.
 
-Built with a powerful full-stack architecture, AttendMe integrates web and mobile platforms to ensure reliability, scalability, and a seamless user experience.
+---
 
-🎯 Project Goals
+# 🎯 Project Objectives
 
-The main goals of the system are to:
+* Replace manual attendance logs with a digital system
+* Improve the accuracy and reliability of attendance records
+* Implement secure **role-based access control**
+* Provide efficient attendance monitoring and reporting
+* Support both **web and mobile platforms** for accessibility
 
-Replace manual attendance logs
+---
 
-Improve attendance accuracy
+# 🛠️ Technology Stack
 
-Provide secure role-based access control
+## Frontend
+* React
 
-Enable digital reporting and analytics
+## Backend
+* Spring Boot
 
-Support both web and mobile platforms
+## Mobile Application
+* Kotlin (Android Studio)
 
-🛠️ Tech Stack
-Frontend
+## Database
+* MySQL
+* Supabase
 
-React
+## Deployment
+* Render
 
-Backend
+## Version Control
+* Git
+* GitHub
 
-Spring Boot
+---
 
-Mobile Application
+# ⚙️ System Features
 
-Kotlin (Android Studio)
+## 👨‍🏫 Teacher Module
+* Record and manage student attendance
+* View attendance history
+* Generate attendance reports
 
-Database
+## 🏫 Administrator Module
+* Manage user accounts (teachers and students)
+* Manage classes
+* Monitor attendance records
+* Access reports and analytics
 
-MySQL
+## 📱 Mobile Application
+* Android-based attendance recording
+* Synchronization with the web system
 
-Supabase
+---
 
-Deployment
+# 🏗️ System Architecture
 
-Render
+AttendMe follows a **full-stack architecture** composed of the following components:
 
-Version Control
+* **React** – Web-based user interface
+* **Spring Boot** – Backend RESTful API services
+* **MySQL / Supabase** – Database management
+* **Kotlin (Android Studio)** – Mobile application
 
-Git
+This architecture ensures **efficient communication between components, secure data handling, and scalable system performance**.
 
-GitHub
+---
 
-⚙️ System Features
-👨‍🏫 Teacher
+# 📊 Project Information
 
-Record student attendance
+* **Project Name:** AttendMe
+* **System Type:** Attendance Management System
+* **Platform:** Web and Mobile
+* **Deployment Platform:** Render
 
-View attendance history
+This project was developed as an **individual project for the System Integration and Architecture subject.**
 
-Generate attendance reports
+---
 
-🏫 Admin
+# 👩‍💻 Developer
 
-Manage users (teachers and students)
+* **Trisha Raye V. Cararag**
+* Bachelor of Science in Information Technology (BSIT)
 
-Monitor attendance records
 
-Access reports and analytics
 
-📱 Mobile Support
-
-Android application for attendance management
-
-Synchronization with the web system
-
-👩‍💻 Developer
-
-Trisha Raye V. Cararag
-BS Information Technology (BSIT)
