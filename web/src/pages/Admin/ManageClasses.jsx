@@ -387,7 +387,7 @@ const ManageClasses = () => {
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="form-group">
-                  <label className="form-label">Class Name *</label>
+                  <label className="form-label">Grade *</label>
                   <input type="text" name="className" className="form-input" value={formData.className} onChange={handleInputChange} required placeholder="e.g., Grade 7 - Sampaguita" />
                 </div>
                 <div className="form-group">

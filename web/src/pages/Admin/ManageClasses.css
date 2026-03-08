@@ -376,7 +376,7 @@
 
 .schedule-time {
   background: #EBF2FF;
-  color: #0F2D5E;
+  color: #0F2D5E !important;
   padding: 3px 10px;
   border-radius: 20px;
   font-size: 0.78rem;
