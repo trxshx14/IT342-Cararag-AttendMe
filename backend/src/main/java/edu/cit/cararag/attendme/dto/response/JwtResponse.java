@@ -1,32 +1,24 @@
 package edu.cit.cararag.attendme.dto.response;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class JwtResponse {
-    
+
     private String accessToken;
     private String refreshToken;
+    @Builder.Default
     private String tokenType = "Bearer";
-    private Long userId;
+    private Long   userId;
     private String username;
     private String email;
+    private String fullName;
     private String role;
-    
-
-    public JwtResponse(String accessToken, String refreshToken, Long userId,
-                      String username, String email, String role) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-        this.tokenType = "Bearer";
-        this.userId = userId;
-        this.username = username;
-        this.email = email;
-        this.role = role;
-    }
-    
+    private String profilePicUrl;
 }

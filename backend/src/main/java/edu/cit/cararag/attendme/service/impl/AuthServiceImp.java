@@ -18,7 +18,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,80 +25,71 @@ public class AuthServiceImp implements AuthService {
 
     @Autowired(required = false)
     private AuthenticationManager authenticationManager;
-    
+
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired(required = false)
     private JwtUtils jwtUtils;
 
     @Override
-public JwtResponse login(LoginRequest request) {
-    System.out.println("========== AUTH SERVICE LOGIN ==========");
+    public JwtResponse login(LoginRequest request) {
+        System.out.println("========== AUTH SERVICE LOGIN ==========");
 
-    // Resolve identifier — support both email and username
-    String identifier = (request.getEmail() != null && !request.getEmail().isBlank())
-        ? request.getEmail()
-        : request.getUsername();
+        String identifier = (request.getEmail() != null && !request.getEmail().isBlank())
+                ? request.getEmail()
+                : request.getUsername();
 
-    System.out.println("1. Login attempt for identifier: '" + identifier + "'");
-    System.out.println("2. Password length: " + (request.getPassword() != null ? request.getPassword().length() : 0));
+        System.out.println("1. Login attempt for: '" + identifier + "'");
 
-    if (authenticationManager == null) {
-        System.err.println("❌ AuthenticationManager is NULL!");
-        throw new IllegalStateException("AuthenticationManager is not configured");
+        if (authenticationManager == null) throw new IllegalStateException("AuthenticationManager is not configured");
+        if (jwtUtils == null)             throw new IllegalStateException("JwtUtils is not configured");
+
+        try {
+            User user = userRepository.findByEmail(identifier)
+                    .or(() -> userRepository.findByUsername(identifier))
+                    .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+
+            System.out.println("✅ User found: " + user.getUsername() + " | Role: " + user.getRole());
+
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), request.getPassword())
+            );
+
+            System.out.println("✅ Authentication successful!");
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            String jwt = jwtUtils.generateJwtToken(authentication);
+            System.out.println("✅ JWT generated");
+
+            userService.updateLastLogin(user.getUsername());
+            System.out.println("✅ Last login updated");
+
+            return JwtResponse.builder()
+                    .accessToken(jwt)
+                    .refreshToken("dummy-refresh-token")
+                    .userId(user.getUserId())
+                    .username(user.getUsername())
+                    .email(user.getEmail())
+                    .fullName(user.getFullName())
+                    .role(user.getRole().name())
+                    .profilePicUrl(user.getProfilePicUrl())
+                    .build();
+
+        } catch (BadCredentialsException e) {
+            System.err.println("❌ Bad credentials: " + e.getMessage());
+            throw new UnauthorizedException("Invalid email or password");
+        } catch (UnauthorizedException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("❌ Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Unexpected error: " + e.getMessage());
+        }
     }
-
-    if (jwtUtils == null) {
-        System.err.println("❌ JwtUtils is NULL!");
-        throw new IllegalStateException("JwtUtils is not configured");
-    }
-
-    try {
-        // Look up user by email first, fallback to username
-        User user = userRepository.findByEmail(identifier)
-            .or(() -> userRepository.findByUsername(identifier))
-            .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
-
-        System.out.println("✅ User found: " + user.getUsername() + " | Role: " + user.getRole());
-
-        // Authenticate using the actual username (Spring Security expects username)
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(user.getUsername(), request.getPassword())
-        );
-
-        System.out.println("✅ Authentication successful!");
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        String jwt = jwtUtils.generateJwtToken(authentication);
-        System.out.println("✅ JWT generated");
-
-        userService.updateLastLogin(user.getUsername());
-        System.out.println("✅ Last login updated");
-
-        return new JwtResponse(
-            jwt,
-            "dummy-refresh-token",
-            user.getUserId(),
-            user.getUsername(),
-            user.getEmail(),
-            user.getRole().name()
-        );
-
-    } catch (BadCredentialsException e) {
-        System.err.println("❌ Bad credentials: " + e.getMessage());
-        throw new UnauthorizedException("Invalid email or password");
-    } catch (UnauthorizedException e) {
-        throw e;
-    } catch (Exception e) {
-        System.err.println("❌ Unexpected error: " + e.getMessage());
-        e.printStackTrace();
-        throw new RuntimeException("Unexpected error: " + e.getMessage());
-    }
-}
 
     @Override
     public UserResponse register(RegisterRequest request) {
@@ -109,14 +99,14 @@ public JwtResponse login(LoginRequest request) {
     @Override
     public UserResponse getCurrentUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        
+
         if (principal instanceof UserDetails) {
             String username = ((UserDetails) principal).getUsername();
             User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
             return UserResponse.fromUser(user);
         }
-        
+
         throw new UnauthorizedException("No authenticated user found");
     }
 }
