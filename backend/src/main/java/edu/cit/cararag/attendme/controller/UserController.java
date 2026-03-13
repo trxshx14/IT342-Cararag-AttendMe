@@ -3,13 +3,16 @@ package edu.cit.cararag.attendme.controller;
 import edu.cit.cararag.attendme.dto.response.ApiResponse;
 import edu.cit.cararag.attendme.dto.requestdto.UserUpdateRequest;
 import edu.cit.cararag.attendme.dto.response.UserResponse;
+import edu.cit.cararag.attendme.service.SupabaseStorageService;
 import edu.cit.cararag.attendme.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -18,6 +21,8 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private SupabaseStorageService supabaseStorageService;
 
     public UserController() {
         System.out.println("🎯🎯🎯 UserController INSTANTIATED! 🎯🎯🎯");
@@ -28,21 +33,21 @@ public class UserController {
         return "UserController is working!";
     }
 
-@GetMapping
-// @PreAuthorize("hasRole('ADMIN')")
-public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
-    System.out.println("========== GET /api/users ==========");
-    try {
-        List<UserResponse> users = userService.getAllUsers();
-        System.out.println("✅ Found " + users.size() + " users");
-        return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
-    } catch (Exception e) {
-        System.err.println("❌ ERROR: " + e.getMessage());
-        e.printStackTrace(); // This will show the full error
-        return ResponseEntity.status(500)
-                .body(ApiResponse.error("Failed to retrieve users: " + e.getMessage()));
+    @GetMapping
+    // @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
+        System.out.println("========== GET /api/users ==========");
+        try {
+            List<UserResponse> users = userService.getAllUsers();
+            System.out.println("✅ Found " + users.size() + " users");
+            return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
+        } catch (Exception e) {
+            System.err.println("❌ ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(ApiResponse.error("Failed to retrieve users: " + e.getMessage()));
+        }
     }
-}
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -118,8 +123,45 @@ public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
         }
     }
 
+    /* ── Profile Picture Upload ─────────────────────────── */
+    @PostMapping("/{id}/profile-picture")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadProfilePicture(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            // Validate file
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("File is empty"));
+            }
+            if (!file.getContentType().startsWith("image/")) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Only image files are allowed"));
+            }
+            if (file.getSize() > 2 * 1024 * 1024) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("File size must be less than 2MB"));
+            }
+
+            // Upload to Supabase Storage
+            String imageUrl = supabaseStorageService.uploadProfilePicture(file);
+
+            // Save URL to user record
+            userService.updateProfilePicture(id, imageUrl);
+
+            return ResponseEntity.ok(ApiResponse.success(
+                    "Profile picture uploaded successfully",
+                    Map.of("profilePicUrl", imageUrl)
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(ApiResponse.error("Failed to upload profile picture: " + e.getMessage()));
+        }
+    }
+
     @GetMapping("/test")
-public String test() {
-    return "UserController is working!";
-}
+    public String test() {
+        return "UserController is working!";
+    }
 }

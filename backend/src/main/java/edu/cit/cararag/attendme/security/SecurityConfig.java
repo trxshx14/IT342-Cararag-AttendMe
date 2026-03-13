@@ -37,18 +37,18 @@ public class SecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
-@Bean
-public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-    configuration.setAllowedHeaders(Arrays.asList("*"));
-    configuration.setAllowCredentials(true);
-    
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration); // This should already be there
-    return source;
-}
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -57,18 +57,27 @@ public CorsConfigurationSource corsConfigurationSource() {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Auth - fully public
                 .requestMatchers("/api/auth/**").permitAll()
+                // Test endpoints - fully public
                 .requestMatchers("/api/test/**").permitAll()
                 .requestMatchers("/api/test-auth/**").permitAll()
+                .requestMatchers("/simple-test").permitAll()
                 .requestMatchers("/api/users/ping").permitAll()
                 .requestMatchers("/api/users/test").permitAll()
-                .requestMatchers("/simple-test").permitAll()
-                .requestMatchers("/api/users/**").permitAll()
-                .requestMatchers("/api/users").permitAll() 
+                // GET users - public (no role needed to list/view)
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users/**").permitAll()
+                // Write/delete on users - must be authenticated (role checked by @PreAuthorize)
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/users/**").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/users/**").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/users/**").authenticated()
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/users/**").authenticated()
+                // Everything else requires auth
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            ;
+
         return http.build();
     }
 }

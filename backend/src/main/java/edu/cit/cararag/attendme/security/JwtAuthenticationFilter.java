@@ -22,45 +22,47 @@ import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
+
     @Autowired
     private JwtUtils jwtUtils;
-    
+
     @Autowired
     private UserDetailsService userDetailsService;
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-    
-    // ADD THIS LIST OF PUBLIC ENDPOINTS
+
+    // Only truly public endpoints — do NOT put /api/users here
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
         "/api/auth/",
         "/api/test/",
         "/api/test-auth/",
         "/api/users/ping",
         "/api/users/test",
-        "/simple-test",
-        "/api/users"
+        "/simple-test"
     );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        
+
         String path = request.getRequestURI();
-        logger.debug("Processing request: {}", path);
-        
-        // ADD THIS CHECK - Skip filter for public endpoints
+        String method = request.getMethod();
+        logger.debug("Processing request: {} {}", method, path);
+
+        // Skip JWT parsing for fully public endpoints
         if (isPublicEndpoint(path)) {
             logger.debug("Public endpoint, skipping JWT filter");
             filterChain.doFilter(request, response);
             return;
         }
-        
-        // Always try to parse JWT for protected endpoints
+
+        // For all other endpoints, always try to parse JWT
+        // (GET /api/users will still work without token — SecurityConfig allows it)
+        // (DELETE/PUT/PATCH /api/users/** need token — SecurityConfig requires it)
         try {
             String jwt = parseJwt(request);
             logger.debug("JWT token present: {}", jwt != null);
-            
+
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
                 logger.debug("Username from JWT: {}", username);
@@ -82,7 +84,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // ADD THIS METHOD
     private boolean isPublicEndpoint(String path) {
         return PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith);
     }
@@ -90,7 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
         logger.debug("Authorization header: '{}'", headerAuth);
-        
+
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             return headerAuth.substring(7);
         }

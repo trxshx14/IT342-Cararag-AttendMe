@@ -58,6 +58,9 @@ public class User {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Column(name = "profile_pic_url")
+    private String profilePicUrl;
     
     @JsonIgnore  // ADD THIS - prevents serialization of classes
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
