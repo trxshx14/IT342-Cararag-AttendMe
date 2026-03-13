@@ -12,7 +12,7 @@ import Login from './pages/Login/Login';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ManageUsers from './pages/Admin/ManageUsers';
 import ManageClasses from './pages/Admin/ManageClasses';
-import AdminReports from './pages/Admin/AdminReports';  // Uncommented
+import AdminReports from './pages/Admin/AdminReports';
 
 // Teacher Pages
 import TeacherDashboard from './pages/Teacher/TeacherDashboard';
@@ -22,8 +22,7 @@ import TeacherReports from './pages/Teacher/TeacherReports';
 
 import './App.css';
 
-// Replace with your Google Client ID from Google Cloud Console
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '119199394548-v3gge1t3omphebmr8p8d8mlcjrib2ubs.apps.googleusercontent.com';
 
 function App() {
   return (
@@ -44,7 +43,7 @@ function App() {
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="users" element={<ManageUsers />} />
               <Route path="classes" element={<ManageClasses />} />
-              <Route path="reports" element={<AdminReports />} />  {/* Uncommented */}
+              <Route path="reports" element={<AdminReports />} />
             </Route>
 
             {/* Protected Routes - Teacher */}
@@ -60,10 +59,10 @@ function App() {
               <Route path="reports" element={<TeacherReports />} />
             </Route>
 
-            {/* Root path - Redirect to login */}
+            {/* Root redirect */}
             <Route path="/" element={<Navigate to="/login" replace />} />
-            
-            {/* Catch all - Redirect to login */}
+
+            {/* Catch all */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </Router>

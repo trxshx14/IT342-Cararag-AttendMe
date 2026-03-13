@@ -3,25 +3,16 @@ import api from './api';
 export const authService = {
   async login(email, password) {
     try {
-      const username = email.split('@')[0];
-      
-      const response = await api.post('/auth/login', {
-        email,
-        password,
-      });
-      
-      // IMPORTANT: Store tokens immediately after successful login
+      const response = await api.post('/auth/login', { email, password });
+
       if (response.data.success) {
         const { accessToken, refreshToken } = response.data.data;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        
-        // Also set the default header for future requests
         api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-        
         console.log('✅ Tokens stored successfully');
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('❌ Login error:', error);
@@ -31,7 +22,6 @@ export const authService = {
 
   async getCurrentUser() {
     try {
-      // Token will be automatically added by interceptor
       const response = await api.get('/auth/me');
       return response.data;
     } catch (error) {
@@ -54,18 +44,25 @@ export const authService = {
     }
   },
 
-  async googleLogin(idToken) {
+  /**
+   * Google login — sends access_token from useGoogleLogin implicit flow.
+   * Backend field name: accessToken (matches GoogleAuthRequest.accessToken)
+   */
+  async googleLogin(googleAccessToken) {
     try {
-      const response = await api.post('/auth/google', { idToken });
-      
-      // Store tokens for Google login too
+      console.log('🔵 Sending Google access_token to backend...');
+      const response = await api.post('/auth/google', {
+        accessToken: googleAccessToken,  // matches GoogleAuthRequest field
+      });
+
       if (response.data.success) {
         const { accessToken, refreshToken } = response.data.data;
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
         api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        console.log('✅ Google tokens stored');
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('❌ Google login error:', error);
