@@ -3,7 +3,7 @@ import { userService } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import {
   Users, ShieldCheck, UserCircle2, CheckCircle2,
-  Search, Pencil, Trash2, X, Plus, Key,
+  Search, Pencil, Trash2, X, Plus,
   ToggleLeft, ToggleRight, Eye, EyeOff, Camera, Upload
 } from 'lucide-react';
 import './ManageUsers.css';
@@ -378,9 +378,6 @@ const ManageUsers = () => {
                       {user.active
                         ? <ToggleRight size={20} color="#16a34a" />
                         : <ToggleLeft  size={20} color="#dc2626" />}
-                    </button>
-                    <button className="mu-btn-icon" onClick={() => handleResetPassword(user.userId)} title="Reset Password">
-                      <Key size={15} color="#0F2D5E" />
                     </button>
                     <button className="mu-btn-icon mu-delete" onClick={() => handleDeleteUser(user.userId, user.fullName)} title="Delete">
                       <Trash2 size={15} color="#ef4444" />
