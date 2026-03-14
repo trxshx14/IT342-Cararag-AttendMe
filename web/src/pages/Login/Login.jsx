@@ -190,7 +190,7 @@ const Login = () => {
             Continue with Google
           </button>
 
-          <p className="login-hint">Use your school credentials to login</p>
+          
         </div>
       </div>
     </div>
