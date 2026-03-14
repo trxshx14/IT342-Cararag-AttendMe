@@ -770,3 +770,11 @@ select.mu-form-input {
   .mu-toolbar-divider { display: none; }
   .mu-pic-upload-area { flex-direction: column; align-items: flex-start; }
 }
+
+.mu-avatar-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}

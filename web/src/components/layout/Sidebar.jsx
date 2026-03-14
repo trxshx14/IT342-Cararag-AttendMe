@@ -9,17 +9,17 @@ const Sidebar = ({ currentPage, onPageChange }) => {
   const navigate = useNavigate();
 
   const teacherNav = [
-    { id: 'dashboard', icon: '🏠', label: 'Dashboard', path: '/teacher/dashboard' },
-    { id: 'take-attendance', icon: '✏️', label: 'Take Attendance', path: '/teacher/take-attendance' },
-    { id: 'history', icon: '📋', label: 'Attendance History', path: '/teacher/history' },
-    { id: 'reports', icon: '📊', label: 'Reports', path: '/teacher/reports' },
+    { id: 'dashboard',       icon: '🏠', label: 'Dashboard',          path: '/teacher/dashboard' },
+    { id: 'take-attendance', icon: '✏️', label: 'Take Attendance',    path: '/teacher/take-attendance' },
+    { id: 'history',         icon: '📋', label: 'Attendance History', path: '/teacher/history' },
+    { id: 'reports',         icon: '📊', label: 'Reports',            path: '/teacher/reports' },
   ];
 
   const adminNav = [
-    { id: 'dashboard', icon: '🏠', label: 'Dashboard', path: '/admin/dashboard' },
-    { id: 'manage-classes', icon: '📚', label: 'Manage Classes', path: '/admin/classes' },
-    { id: 'manage-users', icon: '👥', label: 'Manage Teachers', path: '/admin/users' },
-    { id: 'reports', icon: '📊', label: 'Reports', path: '/admin/reports' },
+    { id: 'dashboard',     icon: '🏠', label: 'Dashboard',        path: '/admin/dashboard' },
+    { id: 'manage-classes',icon: '📚', label: 'Manage Classes',   path: '/admin/classes' },
+    { id: 'manage-users',  icon: '👥', label: 'Manage Teachers',  path: '/admin/users' },
+    { id: 'reports',       icon: '📊', label: 'Reports',          path: '/admin/reports' },
   ];
 
   const nav = user?.role === 'admin' ? adminNav : teacherNav;
@@ -36,6 +36,11 @@ const Sidebar = ({ currentPage, onPageChange }) => {
 
   if (!user) return null;
 
+  // Cache-bust the profile pic so it always shows the latest
+  const picUrl = user.profilePicUrl
+    ? `${user.profilePicUrl}?t=${Date.now()}`
+    : null;
+
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
@@ -44,7 +49,24 @@ const Sidebar = ({ currentPage, onPageChange }) => {
       </div>
 
       <div className="sidebar-user">
-        <div className="user-avatar">{user.avatar}</div>
+        {/* Show profile picture if available, otherwise show initials */}
+        {picUrl ? (
+          <img
+            src={picUrl}
+            alt={user.name}
+            className="user-avatar user-avatar-img"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+        ) : null}
+        <div
+          className="user-avatar"
+          style={{ display: picUrl ? 'none' : 'flex' }}
+        >
+          {user.avatar}
+        </div>
         <div className="user-info">
           <div className="user-name">{user.name}</div>
           <div className="user-role">{user.role}</div>
