@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp">
+
+        <!-- Logo + App Name -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginTop="48dp"
+            android:layout_marginBottom="48dp">
+
+            <FrameLayout
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginBottom="16dp"
+                android:layout_gravity="center">
+
+                <!-- Circle background -->
+                <View
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:background="@drawable/bg_circle_navy"/>
+
+                <!-- Logo centered on top -->
+                <ImageView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/dashboardlogo"
+                    android:scaleType="fitCenter"
+                    android:contentDescription="AttendMe Logo"/>
+
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AttendMe"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="#0F2D5E"
+                android:letterSpacing="0.02"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Smart attendance management"
+                android:textSize="14sp"
+                android:textColor="#64748B"
+                android:layout_marginTop="6dp"/>
+
+        </LinearLayout>
+
+        <!-- Welcome Text -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Welcome back"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:letterSpacing="-0.02"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sign in to your account to continue."
+            android:textSize="14sp"
+            android:textColor="#64748B"
+            android:layout_marginBottom="28dp"/>
+
+        <!-- Error Message -->
+        <TextView
+            android:id="@+id/tvError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_error"
+            android:padding="12dp"
+            android:textColor="#DC2626"
+            android:textSize="13sp"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Email Label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="EMAIL ADDRESS"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:letterSpacing="0.08"
+            android:layout_marginBottom="7dp"/>
+
+        <!-- Email Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            app:boxStrokeColor="#D6E0F0"
+            app:boxBackgroundColor="#FFFFFF"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter your email"
+                android:inputType="textEmailAddress"
+                android:textColor="#0F2D5E"
+                android:textColorHint="#94A3B8"
+                android:textSize="15sp"
+                android:paddingTop="14dp"
+                android:paddingBottom="14dp"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Password Label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PASSWORD"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:letterSpacing="0.08"
+            android:layout_marginBottom="7dp"/>
+
+        <!-- Password Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="28dp"
+            app:boxStrokeColor="#D6E0F0"
+            app:boxBackgroundColor="#FFFFFF"
+            app:passwordToggleEnabled="true"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="••••••••"
+                android:inputType="textPassword"
+                android:textColor="#0F2D5E"
+                android:textColorHint="#94A3B8"
+                android:textSize="15sp"
+                android:paddingTop="14dp"
+                android:paddingBottom="14dp"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Sign In Button -->
+        <Button
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Sign In"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="#0F2D5E"
+            android:stateListAnimator="@null"
+            app:cornerRadius="12dp"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Loading indicator -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="#0F2D5E"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Divider -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="#E2E8F0"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="OR"
+                android:textSize="12sp"
+                android:textColor="#94A3B8"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"/>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"
+                android:background="#E2E8F0"/>
+
+        </LinearLayout>
+
+        <!-- Google Sign In Button -->
+        <Button
+            android:id="@+id/btnGoogleLogin"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Continue with Google"
+            android:textColor="#0F2D5E"
+            android:textSize="15sp"
+            android:textStyle="normal"
+            android:backgroundTint="#FFFFFF"
+            android:stateListAnimator="@null"
+            android:drawableStart="@drawable/ic_google"
+            android:drawablePadding="10dp"
+            android:layout_marginBottom="16dp"
+            app:cornerRadius="12dp"
+            app:strokeColor="#D6E0F0"
+            app:strokeWidth="1.5dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+        \
+
+    </LinearLayout>
+
+</ScrollView>
