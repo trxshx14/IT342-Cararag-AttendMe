@@ -19,23 +19,22 @@ Built using a **modern full-stack architecture**, AttendMe integrates **web and 
 
 # 🛠️ Technology Stack
 
-## Frontend
+**Frontend**
 * React
 
-## Backend
+**Backend**
 * Spring Boot
 
-## Mobile Application
+**Mobile Application**
 * Kotlin (Android Studio)
 
-## Database
-* MySQL
+**Database**
 * Supabase
 
-## Deployment
+**Deployment**
 * Render
 
-## Version Control
+**Version Control**
 * Git
 * GitHub
 
@@ -46,13 +45,12 @@ Built using a **modern full-stack architecture**, AttendMe integrates **web and 
 ## 👨‍🏫 Teacher Module
 * Record and manage student attendance
 * View attendance history
-* Generate attendance reports
+* Generate attendance reports in assigned classes
 
 ## 🏫 Administrator Module
-* Manage user accounts (teachers and students)
+* Manage user accounts of teachers
 * Manage classes
-* Monitor attendance records
-* Access reports and analytics
+* Monitor attendance records and access reports of all classes
 
 ## 📱 Mobile Application
 * Android-based attendance recording
@@ -85,9 +83,8 @@ This project was developed as an **individual project for the System Integration
 ---
 
 # 👩‍💻 Developer
-
-* **Trisha Raye V. Cararag**
-* Bachelor of Science in Information Technology (BSIT)
+**Trisha Raye V. Cararag**
+Bachelor of Science in Information Technology (BSIT)
 
 
 
