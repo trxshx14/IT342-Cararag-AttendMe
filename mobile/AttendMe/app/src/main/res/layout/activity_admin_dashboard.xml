@@ -1,44 +1,327 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="32dp"
-    android:background="#FFFFFF">
+    android:background="#F4F7FB">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="🛡️"
-        android:textSize="56sp"
-        android:layout_marginBottom="24dp"/>
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tvWelcome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Welcome, Admin!"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="#0F2D5E"
-        android:layout_marginBottom="8dp"/>
+        <!-- ── Welcome Banner ─────────────────────────── -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="#0F2D5E">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Admin Dashboard"
-        android:textSize="14sp"
-        android:textColor="#64748B"
-        android:layout_marginBottom="48dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
 
-    <TextView
-        android:id="@+id/tvLogout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sign Out"
-        android:textSize="14sp"
-        android:textColor="#DC2626"
-        android:padding="12dp"/>
+                <TextView
+                    android:id="@+id/tvGreeting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="GOOD MORNING"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#AAC4E0"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="4dp"/>
 
-</LinearLayout>
+                <TextView
+                    android:id="@+id/tvAdminName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Administrator"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginBottom="4dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Here's what's happening with your school today."
+                    android:textSize="13sp"
+                    android:textColor="#AAC4E0"
+                    android:layout_marginBottom="20dp"/>
+
+                <!-- Mini Stats Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="@drawable/bg_mini_stats"
+                    android:padding="12dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView android:id="@+id/tvMiniStudents"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="0" android:textSize="22sp" android:textStyle="bold"
+                            android:textColor="#FFFFFF"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="STUDENTS" android:textSize="10sp" android:textStyle="bold"
+                            android:textColor="#AAC4E0" android:letterSpacing="0.05"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="1dp" android:layout_height="32dp" android:background="#3A5A8A"/>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView android:id="@+id/tvMiniClasses"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="0" android:textSize="22sp" android:textStyle="bold"
+                            android:textColor="#FFFFFF"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="CLASSES" android:textSize="10sp" android:textStyle="bold"
+                            android:textColor="#AAC4E0" android:letterSpacing="0.05"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="1dp" android:layout_height="32dp" android:background="#3A5A8A"/>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <TextView android:id="@+id/tvMiniTeachers"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="0" android:textSize="22sp" android:textStyle="bold"
+                            android:textColor="#FFFFFF"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="TEACHERS" android:textSize="10sp" android:textStyle="bold"
+                            android:textColor="#AAC4E0" android:letterSpacing="0.05"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ── Stats Grid 2x2 ──────────────────────────── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:layout_marginEnd="6dp"
+                app:cardCornerRadius="16dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="16dp"
+                    android:background="@drawable/bg_stat_card_left">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="🎓" android:textSize="24sp" android:layout_marginBottom="8dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="STUDENTS" android:textSize="10sp" android:textStyle="bold"
+                        android:textColor="#64748B" android:letterSpacing="0.06"/>
+                    <TextView android:id="@+id/tvStatStudents"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="28sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:layout_marginStart="6dp"
+                app:cardCornerRadius="16dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="16dp"
+                    android:background="@drawable/bg_stat_card_left">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="👤" android:textSize="24sp" android:layout_marginBottom="8dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="TEACHERS" android:textSize="10sp" android:textStyle="bold"
+                        android:textColor="#64748B" android:letterSpacing="0.06"/>
+                    <TextView android:id="@+id/tvStatTeachers"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="28sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:layout_marginEnd="6dp"
+                app:cardCornerRadius="16dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="16dp"
+                    android:background="@drawable/bg_stat_card_left">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="📚" android:textSize="24sp" android:layout_marginBottom="8dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="CLASSES" android:textSize="10sp" android:textStyle="bold"
+                        android:textColor="#64748B" android:letterSpacing="0.06"/>
+                    <TextView android:id="@+id/tvStatClasses"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="28sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:layout_marginStart="6dp"
+                app:cardCornerRadius="16dp" app:cardElevation="2dp" app:cardBackgroundColor="#FFFFFF">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="16dp"
+                    android:background="@drawable/bg_stat_card_left">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="📊" android:textSize="24sp" android:layout_marginBottom="8dp"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="AVG CLASS SIZE" android:textSize="10sp" android:textStyle="bold"
+                        android:textColor="#64748B" android:letterSpacing="0.06"/>
+                    <TextView android:id="@+id/tvStatAvgSize"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="0" android:textSize="28sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+        <!-- ── Quick Actions ───────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Quick Actions"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#0F2D5E"
+            android:layout_marginBottom="10dp"/>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardManageUsers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFFFFF">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:padding="18dp" android:gravity="center_vertical">
+                <LinearLayout android:layout_width="48dp" android:layout_height="48dp"
+                    android:background="@drawable/bg_icon_navy" android:gravity="center"
+                    android:layout_marginEnd="16dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="👥" android:textSize="22sp"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Manage Users" android:textSize="15sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Add or edit teacher accounts" android:textSize="12sp"
+                        android:textColor="#64748B"/>
+                </LinearLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textSize="24sp" android:textColor="#1E50A2"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardManageClasses"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFFFFF">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:padding="18dp" android:gravity="center_vertical">
+                <LinearLayout android:layout_width="48dp" android:layout_height="48dp"
+                    android:background="@drawable/bg_icon_navy" android:gravity="center"
+                    android:layout_marginEnd="16dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="📚" android:textSize="22sp"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Manage Classes" android:textSize="15sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Create or modify classes" android:textSize="12sp"
+                        android:textColor="#64748B"/>
+                </LinearLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textSize="24sp" android:textColor="#1E50A2"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardReports"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFFFFF">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:padding="18dp" android:gravity="center_vertical">
+                <LinearLayout android:layout_width="48dp" android:layout_height="48dp"
+                    android:background="@drawable/bg_icon_navy" android:gravity="center"
+                    android:layout_marginEnd="16dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="📊" android:textSize="22sp"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="View Reports" android:textSize="15sp" android:textStyle="bold"
+                        android:textColor="#0F2D5E"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Analytics and insights" android:textSize="12sp"
+                        android:textColor="#64748B"/>
+                </LinearLayout>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="›" android:textSize="24sp" android:textColor="#1E50A2"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Sign Out -->
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Sign Out"
+            android:textColor="#DC2626"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:backgroundTint="#FEE2E2"
+            android:stateListAnimator="@null"
+            app:cornerRadius="12dp"
+            android:layout_marginBottom="24dp"/>
+
+    </LinearLayout>
+</ScrollView>
